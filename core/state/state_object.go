@@ -252,6 +252,11 @@ func (s *stateObject) GetCommittedState(db Database, key common.Hash) common.Has
 		}
 		value.SetBytes(content)
 	}
+
+	if sS := s.db.blockSpecimen; sS != nil {
+		sS.LogStorageRead(s.address, key, value)
+	}
+
 	s.originStorage[key] = value
 	return value
 }
@@ -480,6 +485,11 @@ func (s *stateObject) Code(db Database) []byte {
 	if err != nil {
 		s.setError(fmt.Errorf("can't load code hash %x: %v", s.CodeHash(), err))
 	}
+
+	if sS := s.db.blockSpecimen; sS != nil {
+		sS.LogCodeRead(s.CodeHash(), code)
+	}
+
 	s.code = code
 	return code
 }

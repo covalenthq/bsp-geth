@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"math"
 	"math/big"
+	"net/url"
 	"os"
 	"path/filepath"
 	godebug "runtime/debug"
@@ -659,6 +660,11 @@ var (
 	DNSDiscoveryFlag = cli.StringFlag{
 		Name:  "discovery.dns",
 		Usage: "Sets DNS discovery entry points (use \"\" to disable DNS)",
+	}
+	BlockReplicationTargetsFlag = cli.StringFlag{
+		Name:  "replication.targets",
+		Usage: "Comma separated URLs for message-queue delivery of block specimens",
+		Value: "",
 	}
 
 	// ATM the url is left to the user and deployment to
@@ -1470,6 +1476,7 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	setMiner(ctx, &cfg.Miner)
 	setWhitelist(ctx, cfg)
 	setLes(ctx, cfg)
+	setBlockReplicationTargets(ctx, cfg)
 
 	// Cap the cache allowance and tune the garbage collector
 	mem, err := gopsutil.VirtualMemory()
@@ -1927,5 +1934,52 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 			}
 		}
 		return action(ctx)
+	}
+}
+
+// setBlockResultTargets creates a list of replication targets from the command line flags.
+func setBlockReplicationTargets(ctx *cli.Context, cfg *eth.Config) {
+	var urls []string
+
+	if ctx.GlobalIsSet(BlockReplicationTargetsFlag.Name) {
+		urls = strings.Split(ctx.GlobalString(BlockReplicationTargetsFlag.Name), ",")
+	}
+
+	cfg.BlockReplicationTargets = make([]string, 0, len(urls))
+	for _, urlStr := range urls {
+		if urlStr != "" {
+			_, err := url.Parse(urlStr)
+			if err != nil {
+				log.Crit("Replication-target URL invalid", "url", urlStr, "err", err)
+				os.Exit(1)
+			}
+			cfg.BlockReplicationTargets = append(cfg.BlockReplicationTargets, urlStr)
+		}
+	}
+}
+
+func CreateReplicators(config *eth.Config) []*core.ChainReplicator {
+	replicators := make([]*core.ChainReplicator, 0)
+
+	for _, blockReplicationTargets := range config.BlockReplicationTargets {
+		blockRepl, err := eth.CreateReplicator(blockReplicationTargets)
+		if err != nil {
+			Fatalf("Can't create replication target: %v", err)
+		}
+		replicators = append(replicators, blockRepl)
+	}
+
+	return replicators
+}
+
+func AttachReplicators(replicators []*core.ChainReplicator, chain *core.BlockChain) {
+	for _, replicator := range replicators {
+		replicator.Start(chain)
+	}
+}
+
+func DrainReplicators(replicators []*core.ChainReplicator) {
+	for _, replicator := range replicators {
+		replicator.Stop()
 	}
 }
