@@ -22,7 +22,7 @@ type MulticallExecutionResult struct {
 	Err        string        `json:",omitempty"`
 }
 
-func (s *PublicBlockChainAPI) Multicall(ctx context.Context, commonCallArgs TransactionArgs, contractsWithPayloads MulticallRunlist, blockNrOrHash rpc.BlockNumberOrHash) (MulticallResult, error) {
+func (s *BlockChainAPI) Multicall(ctx context.Context, commonCallArgs TransactionArgs, contractsWithPayloads MulticallRunlist, blockNrOrHash rpc.BlockNumberOrHash) (MulticallResult, error) {
 	start := time.Now()
 
 	// result stores
@@ -78,7 +78,7 @@ func (s *PublicBlockChainAPI) Multicall(ctx context.Context, commonCallArgs Tran
 
 			mcExecResult := &MulticallExecutionResult{
 				UsedGas: execResult.UsedGas,
-				Err: effectiveErrDesc,
+				Err:     effectiveErrDesc,
 			}
 
 			if len(execResult.ReturnData) > 0 {

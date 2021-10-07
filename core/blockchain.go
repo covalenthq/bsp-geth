@@ -211,6 +211,10 @@ type BlockChain struct {
 	processor  Processor // Block transaction processor interface
 	forker     *ForkChoice
 	vmConfig   vm.Config
+
+	shouldPreserve func(*types.Block) bool // Function used to determine whether should preserve the given block.
+
+	blockReplicationFeed event.Feed
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -1606,6 +1610,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		}
 
 		// Enable prefetching to pull in trie node paths while processing transactions
+		statedb.EnableStateSpecimenTracking()
 		statedb.StartPrefetcher("chain")
 		activeState = statedb
 
@@ -1700,7 +1705,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 				"uncles", len(block.Uncles()), "txs", len(block.Transactions()), "gas", block.GasUsed(),
 				"elapsed", common.PrettyDuration(time.Since(start)),
 				"root", block.Root())
-
+			bc.createBlockReplica(block, statedb.TakeStateSpecimen())
 			lastCanon = block
 
 			// Only count canonical blocks for GC processing time

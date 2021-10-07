@@ -100,7 +100,8 @@ type Ethereum struct {
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 
-	shutdownTracker *shutdowncheck.ShutdownTracker // Tracks if and when the node has shutdown ungracefully
+	shutdownTracker  *shutdowncheck.ShutdownTracker // Tracks if and when the node has shutdown ungracefully
+	blockReplicators []*core.ChainReplicator
 }
 
 // New creates a new Ethereum object (including the
@@ -168,6 +169,16 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		bloomIndexer:      core.NewBloomIndexer(chainDb, params.BloomBitsBlocks, params.BloomConfirms),
 		p2pServer:         stack.Server(),
 		shutdownTracker:   shutdowncheck.NewShutdownTracker(chainDb),
+		blockReplicators:  make([]*core.ChainReplicator, 0),
+	}
+
+	for _, targets := range config.BlockReplicationTargets {
+		replicator, err := CreateReplicator(targets)
+		if err != nil {
+			return nil, err
+		}
+		log.Info("Block replication targets are :", targets)
+		eth.blockReplicators = append(eth.blockReplicators, replicator)
 	}
 
 	bcVersion := rawdb.ReadDatabaseVersion(chainDb)
@@ -214,6 +225,10 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		rawdb.WriteChainConfig(chainDb, genesisHash, chainConfig)
 	}
 	eth.bloomIndexer.Start(eth.blockchain)
+
+	for _, bRRepl := range eth.blockReplicators {
+		bRRepl.Start(eth.blockchain)
+	}
 
 	if config.TxPool.Journal != "" {
 		config.TxPool.Journal = stack.ResolvePath(config.TxPool.Journal)
@@ -565,6 +580,9 @@ func (s *Ethereum) Stop() error {
 	s.txPool.Stop()
 	s.miner.Close()
 	s.blockchain.Stop()
+	for _, repl := range s.blockReplicators {
+		repl.Stop()
+	}
 	s.engine.Close()
 
 	// Clean shutdown marker as the last thing before closing db

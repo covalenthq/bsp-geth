@@ -91,7 +91,9 @@ The dumpgenesis command dumps the genesis block configuration in JSON format to 
 			utils.MetricsInfluxDBBucketFlag,
 			utils.MetricsInfluxDBOrganizationFlag,
 			utils.TxLookupLimitFlag,
+			utils.BlockReplicationTargetsFlag,
 		}, utils.DatabasePathFlags...),
+		Category: "BLOCKCHAIN COMMANDS",
 		Description: `
 The import command imports blocks from an RLP-encoded form. The form can be one file
 with several RLP-encoded blocks, or several files can be used.
@@ -220,11 +222,14 @@ func importChain(ctx *cli.Context) error {
 	// Start system runtime metrics collection
 	go metrics.CollectProcessMetrics(3 * time.Second)
 
-	stack, _ := makeConfigNode(ctx)
+	stack, cfg := makeConfigNode(ctx)
 	defer stack.Close()
+	replicators := utils.CreateReplicators(&cfg.Eth)
 
 	chain, db := utils.MakeChain(ctx, stack)
 	defer db.Close()
+
+	utils.AttachReplicators(replicators, chain)
 
 	// Start periodically gathering memory profiles
 	var peakMemAlloc, peakMemSys uint64
@@ -260,6 +265,7 @@ func importChain(ctx *cli.Context) error {
 		}
 	}
 	chain.Stop()
+	utils.DrainReplicators(replicators)
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
 	// Output pre-compaction stats mostly to see the import trashing

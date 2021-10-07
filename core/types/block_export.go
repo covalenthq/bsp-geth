@@ -1,0 +1,89 @@
+package types
+
+import (
+	"math/big"
+
+	"github.com/ethereum/go-ethereum/common"
+)
+
+type ExportBlockResult struct {
+	Hash         common.Hash
+	TotalDiff    *big.Int
+	Header       *Header
+	Transactions []*TransactionExportRLP
+	Uncles       []*Header
+	Receipts     []*ReceiptExportRLP
+	Senders      []common.Address
+}
+
+type LogsExportRLP struct {
+	Address     common.Address `json:"address" gencodec:"required"`
+	Topics      []common.Hash  `json:"topics" gencodec:"required"`
+	Data        []byte         `json:"data" gencodec:"required"`
+	BlockNumber uint64         `json:"blockNumber"`
+	TxHash      common.Hash    `json:"transactionHash" gencodec:"required"`
+	TxIndex     uint           `json:"transactionIndex"`
+	BlockHash   common.Hash    `json:"blockHash"`
+	Index       uint           `json:"logIndex"`
+	Removed     bool           `json:"removed"`
+}
+
+type ReceiptForExport Receipt
+
+type ReceiptExportRLP struct {
+	PostStateOrStatus []byte
+	CumulativeGasUsed uint64
+	TxHash            common.Hash
+	ContractAddress   common.Address
+	Logs              []*LogsExportRLP
+	GasUsed           uint64
+}
+
+type TransactionForExport Transaction
+
+type TransactionExportRLP struct {
+	AccountNonce uint64          `json:"nonce"    gencodec:"required"`
+	Price        *big.Int        `json:"gasPrice" gencodec:"required"`
+	GasLimit     uint64          `json:"gas"      gencodec:"required"`
+	Sender       common.Address  `json:"from"     gencodec:"required"`
+	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
+	Amount       *big.Int        `json:"value"    gencodec:"required"`
+	Payload      []byte          `json:"input"    gencodec:"required"`
+}
+
+func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
+	enc := &ReceiptExportRLP{
+		PostStateOrStatus: (*Receipt)(r).statusEncoding(),
+		GasUsed:           r.GasUsed,
+		CumulativeGasUsed: r.CumulativeGasUsed,
+		TxHash:            r.TxHash,
+		ContractAddress:   r.ContractAddress,
+		Logs:              make([]*LogsExportRLP, len(r.Logs)),
+	}
+	for i, log := range r.Logs {
+		enc.Logs[i] = (*LogsExportRLP)(log)
+	}
+	return enc
+}
+
+func (tx *TransactionForExport) ExportTx() *TransactionExportRLP {
+	var inner_tx *Transaction = (*Transaction)(tx)
+	var signer Signer = FrontierSigner{}
+
+	if inner_tx.Protected() {
+		signer = NewEIP155Signer(inner_tx.ChainId())
+	}
+	from, _ := Sender(signer, inner_tx)
+
+	txData := tx.inner
+
+	return &TransactionExportRLP{
+		AccountNonce: txData.nonce(),
+		Price:        txData.gasPrice(),
+		GasLimit:     txData.gas(),
+		Sender:       from,
+		Recipient:    txData.to(),
+		Amount:       txData.value(),
+		Payload:      txData.data(),
+	}
+}

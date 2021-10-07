@@ -125,6 +125,9 @@ type StateDB struct {
 	StorageUpdated int
 	AccountDeleted int
 	StorageDeleted int
+
+  // Log of state data read from backing DB
+	blockSpecimen *types.BlockSpecimen
 }
 
 // New creates a new state from a given trie.
@@ -153,6 +156,11 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 			sdb.snapAccounts = make(map[common.Hash][]byte)
 			sdb.snapStorage = make(map[common.Hash]map[common.Hash][]byte)
 		}
+	}
+	if sdb.blockSpecimen != nil {
+		sdb.blockSpecimen = types.NewBlockSpecimen()
+	} else {
+		sdb.blockSpecimen = nil
 	}
 	return sdb, nil
 }
@@ -554,6 +562,10 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 			return nil
 		}
 	}
+	if s.blockSpecimen != nil {
+		s.blockSpecimen.LogAccountRead(addr, data.Nonce, data.Balance, data.CodeHash)
+	}
+
 	// Insert into the live set
 	obj := newObject(s, addr, *data)
 	s.setStateObject(obj)
@@ -741,6 +753,9 @@ func (s *StateDB) Copy() *StateDB {
 			}
 			state.snapStorage[k] = temp
 		}
+	}
+	if state.blockSpecimen != nil {
+		state.blockSpecimen = state.blockSpecimen.Copy()
 	}
 	return state
 }
@@ -1050,4 +1065,14 @@ func (s *StateDB) AddressInAccessList(addr common.Address) bool {
 // SlotInAccessList returns true if the given (address, slot)-tuple is in the access list.
 func (s *StateDB) SlotInAccessList(addr common.Address, slot common.Hash) (addressPresent bool, slotPresent bool) {
 	return s.accessList.Contains(addr, slot)
+}
+
+func (self *StateDB) EnableStateSpecimenTracking() {
+	self.blockSpecimen = types.NewBlockSpecimen()
+}
+
+func (self *StateDB) TakeStateSpecimen() *types.BlockSpecimen {
+	sS := self.blockSpecimen
+	self.blockSpecimen = nil
+	return sS
 }
