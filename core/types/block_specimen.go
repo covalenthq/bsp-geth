@@ -8,6 +8,14 @@ import (
 )
 
 type BlockSpecimen struct {
+	Hash         common.Hash
+	Header       *Header
+	Transactions []*TransactionExportRLP
+	Uncles       []*Header
+	State        *StateSpecimen
+}
+
+type StateSpecimen struct {
 	AccountRead []*accountRead
 	StorageRead []*storageRead
 	CodeRead    []*codeRead
@@ -36,9 +44,14 @@ func NewBlockSpecimen() *BlockSpecimen {
 	return bs
 }
 
-func (sp *BlockSpecimen) Copy() *BlockSpecimen {
+func NewStateSpecimen() *StateSpecimen {
+	sp := &StateSpecimen{}
+	return sp
+}
 
-	cpy := BlockSpecimen{
+func (sp *StateSpecimen) Copy() *StateSpecimen {
+
+	cpy := StateSpecimen{
 		AccountRead: make([]*accountRead, 0),
 		StorageRead: make([]*storageRead, 0),
 		CodeRead:    make([]*codeRead, 0),
@@ -47,7 +60,7 @@ func (sp *BlockSpecimen) Copy() *BlockSpecimen {
 	return &cpy
 }
 
-func (sp *BlockSpecimen) LogAccountRead(addr common.Address, nonce uint64, balance *big.Int, codeHashB []byte) *BlockSpecimen {
+func (sp *StateSpecimen) LogAccountRead(addr common.Address, nonce uint64, balance *big.Int, codeHashB []byte) *StateSpecimen {
 	codeHash := common.BytesToHash(codeHashB)
 	log.Trace("Retrieved committed account", "addr", addr, "nonce", nonce, "balance", balance, "codeHash", codeHash)
 
@@ -61,7 +74,7 @@ func (sp *BlockSpecimen) LogAccountRead(addr common.Address, nonce uint64, balan
 	return sp
 }
 
-func (sp *BlockSpecimen) LogStorageRead(account common.Address, slotKey common.Hash, value common.Hash) *BlockSpecimen {
+func (sp *StateSpecimen) LogStorageRead(account common.Address, slotKey common.Hash, value common.Hash) *StateSpecimen {
 	log.Trace("Retrieved committed storage", "account", account, "slotKey", slotKey, "value", value)
 
 	sp.StorageRead = append(sp.StorageRead, &storageRead{
@@ -73,7 +86,7 @@ func (sp *BlockSpecimen) LogStorageRead(account common.Address, slotKey common.H
 	return sp
 }
 
-func (sp *BlockSpecimen) LogCodeRead(hashB []byte, code []byte) *BlockSpecimen {
+func (sp *StateSpecimen) LogCodeRead(hashB []byte, code []byte) *StateSpecimen {
 	hash := common.BytesToHash(hashB)
 	log.Trace("Retrieved code", "hash", hash, "len", len(code))
 
