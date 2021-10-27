@@ -177,7 +177,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Info("Block replication targets are :", targets)
+		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId)
 		eth.blockReplicators = append(eth.blockReplicators, replicator)
 	}
 

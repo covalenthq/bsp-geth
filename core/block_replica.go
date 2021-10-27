@@ -44,7 +44,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *type
 	}
 	sHash := block.Hash().String()
 
-	log.Debug("Creating block-result replication event for block: ", block.NumberU64())
+	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
 		"block-result",
 		sHash,
@@ -52,7 +52,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *type
 		time.Now(),
 	})
 
-	log.Debug("Creating block-specimen replication event for block: ", block.NumberU64())
+	log.Info("Creating block-specimen replication event", "block number", block.NumberU64(), "hash", sHash)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
 		"block-specimen",
 		sHash,
