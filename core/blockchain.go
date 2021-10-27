@@ -1027,6 +1027,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 			} else if rawdb.ReadTxIndexTail(bc.db) != nil {
 				rawdb.WriteTxLookupEntriesByBlock(batch, block)
 			}
+			bc.createBlockReplica(block, &types.StateSpecimen{})
 			stats.processed++
 
 			if batch.ValueSize() > ethdb.IdealBatchSize || i == len(blockChain)-1 {
