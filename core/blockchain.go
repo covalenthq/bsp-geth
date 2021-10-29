@@ -1027,7 +1027,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 			} else if rawdb.ReadTxIndexTail(bc.db) != nil {
 				rawdb.WriteTxLookupEntriesByBlock(batch, block)
 			}
-			bc.createBlockReplica(block, &types.StateSpecimen{})
+			bc.createBlockReplica(block, bc.chainConfig, &types.StateSpecimen{})
 			stats.processed++
 
 			if batch.ValueSize() > ethdb.IdealBatchSize || i == len(blockChain)-1 {
@@ -1707,7 +1707,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 				"uncles", len(block.Uncles()), "txs", len(block.Transactions()), "gas", block.GasUsed(),
 				"elapsed", common.PrettyDuration(time.Since(start)),
 				"root", block.Root())
-			bc.createBlockReplica(block, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
 			lastCanon = block
 
 			// Only count canonical blocks for GC processing time
@@ -1718,7 +1718,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
-			bc.createBlockReplica(block, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
 
 		default:
 			// This in theory is impossible, but lets be nice to our future selves and leave
@@ -1727,7 +1727,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
-			bc.createBlockReplica(block, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
 		}
 	}
 

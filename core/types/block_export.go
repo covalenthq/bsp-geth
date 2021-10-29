@@ -7,6 +7,7 @@ import (
 )
 
 type ExportBlockResult struct {
+	NetworkId    uint64
 	Hash         common.Hash
 	TotalDiff    *big.Int
 	Header       *Header
@@ -17,11 +18,11 @@ type ExportBlockResult struct {
 }
 
 type LogsExportRLP struct {
-	Address     common.Address `json:"address" gencodec:"required"`
-	Topics      []common.Hash  `json:"topics" gencodec:"required"`
-	Data        []byte         `json:"data" gencodec:"required"`
+	Address     common.Address `json:"address"`
+	Topics      []common.Hash  `json:"topics"`
+	Data        []byte         `json:"data"`
 	BlockNumber uint64         `json:"blockNumber"`
-	TxHash      common.Hash    `json:"transactionHash" gencodec:"required"`
+	TxHash      common.Hash    `json:"transactionHash"`
 	TxIndex     uint           `json:"transactionIndex"`
 	BlockHash   common.Hash    `json:"blockHash"`
 	Index       uint           `json:"logIndex"`
@@ -42,13 +43,13 @@ type ReceiptExportRLP struct {
 type TransactionForExport Transaction
 
 type TransactionExportRLP struct {
-	AccountNonce uint64          `json:"nonce"    gencodec:"required"`
-	Price        *big.Int        `json:"gasPrice" gencodec:"required"`
-	GasLimit     uint64          `json:"gas"      gencodec:"required"`
-	Sender       common.Address  `json:"from"     gencodec:"required"`
-	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
-	Amount       *big.Int        `json:"value"    gencodec:"required"`
-	Payload      []byte          `json:"input"    gencodec:"required"`
+	AccountNonce uint64          `json:"nonce"`
+	Price        *big.Int        `json:"gasPrice"`
+	GasLimit     uint64          `json:"gas"`
+	Sender       common.Address  `json:"from"`
+	Recipient    *common.Address `json:"to" rlp:"nil"` // nil means contract creation
+	Amount       *big.Int        `json:"value"`
+	Payload      []byte          `json:"input"`
 }
 
 func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
