@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
@@ -18,15 +19,14 @@ type BlockReplicationEvent struct {
 	Data []byte
 }
 
-func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *types.StateSpecimen) error {
-
+func (bc *BlockChain) createBlockReplica(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) error {
 	//block result
-	exportBlockResult, err := bc.createBlockResult(block)
+	exportBlockResult, err := bc.createBlockResult(block, config)
 	if err != nil {
 		return err
 	}
 	//block specimen
-	exportBlockSpecimen, err := bc.createBlockSpecimen(block, stateSpecimen)
+	exportBlockSpecimen, err := bc.createBlockSpecimen(block, config, stateSpecimen)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *type
 	}
 	sHash := block.Hash().String()
 
-	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash)
+	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash, "result", exportBlockResult)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
 		"block-result",
 		sHash,
@@ -59,7 +59,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *type
 	return nil
 }
 
-func (bc *BlockChain) createBlockSpecimen(block *types.Block, stateSpecimen *types.StateSpecimen) (*types.BlockSpecimen, error) {
+func (bc *BlockChain) createBlockSpecimen(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.BlockSpecimen, error) {
 
 	bHash := block.Hash()
 	bNum := block.NumberU64()
@@ -85,6 +85,7 @@ func (bc *BlockChain) createBlockSpecimen(block *types.Block, stateSpecimen *typ
 
 	//block specimen export
 	exportBlockSpecimen := &types.BlockSpecimen{
+		NetworkId:    config.ChainID.Uint64(),
 		Hash:         bHash,
 		Header:       header,
 		Transactions: txsRlp,
@@ -94,7 +95,7 @@ func (bc *BlockChain) createBlockSpecimen(block *types.Block, stateSpecimen *typ
 	return exportBlockSpecimen, nil
 }
 
-func (bc *BlockChain) createBlockResult(block *types.Block) (*types.ExportBlockResult, error) {
+func (bc *BlockChain) createBlockResult(block *types.Block, config *params.ChainConfig) (*types.ExportBlockResult, error) {
 
 	bHash := block.Hash()
 	bNum := block.NumberU64()
@@ -149,6 +150,7 @@ func (bc *BlockChain) createBlockResult(block *types.Block) (*types.ExportBlockR
 
 	//block result export
 	exportBlockResult := &types.ExportBlockResult{
+		NetworkId:    config.ChainID.Uint64(),
 		Hash:         bHash,
 		TotalDiff:    td,
 		Header:       header,

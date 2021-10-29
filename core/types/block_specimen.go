@@ -8,6 +8,7 @@ import (
 )
 
 type BlockSpecimen struct {
+	NetworkId    uint64
 	Hash         common.Hash
 	Header       *Header
 	Transactions []*TransactionExportRLP
