@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -14,10 +13,9 @@ import (
 )
 
 type BlockReplicationEvent struct {
-	Type     string
-	Hash     string
-	Data     []byte
-	Datetime time.Time
+	Type string
+	Hash string
+	Data []byte
 }
 
 func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *types.StateSpecimen) error {
@@ -49,7 +47,6 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *type
 		"block-result",
 		sHash,
 		blockResultRLP,
-		time.Now(),
 	})
 
 	log.Info("Creating block-specimen replication event", "block number", block.NumberU64(), "hash", sHash)
@@ -57,7 +54,6 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, stateSpecimen *type
 		"block-specimen",
 		sHash,
 		blockSpecimenRLP,
-		time.Now(),
 	})
 
 	return nil

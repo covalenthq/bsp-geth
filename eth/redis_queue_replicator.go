@@ -58,10 +58,9 @@ func (r *RedisQueueReplicator) Process(ctx context.Context, events []*core.Block
 			Stream:       r.qKey,
 			MaxLenApprox: 500000,
 			Values: map[string]interface{}{
-				"type":     event.Type,
-				"hash":     event.Hash,
-				"data":     encodedData,
-				"datetime": event.Datetime,
+				"type": event.Type,
+				"hash": event.Hash,
+				"data": encodedData,
 			},
 		})
 	}
