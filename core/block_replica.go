@@ -3,27 +3,30 @@ package core
 import (
 	"bytes"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type BlockReplicationEvent struct {
-	Type     string
-	Hash     string
-	Data     []byte
-	Datetime time.Time
+	Type string
+	Hash string
+	Data []byte
 }
 
-func (bc *BlockChain) createBlockReplica(block *types.Block, specimen *types.BlockSpecimen) error {
-
+func (bc *BlockChain) createBlockReplica(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) error {
 	//block result
-	exportBlockResult, err := bc.createBlockResult(block)
+	exportBlockResult, err := bc.createBlockResult(block, config)
+	if err != nil {
+		return err
+	}
+	//block specimen
+	exportBlockSpecimen, err := bc.createBlockSpecimen(block, config, stateSpecimen)
 	if err != nil {
 		return err
 	}
@@ -33,32 +36,66 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, specimen *types.Blo
 		return err
 	}
 	//specimen encode to rlp
-	blockSpecimenRLP, err := rlp.EncodeToBytes(specimen)
+	blockSpecimenRLP, err := rlp.EncodeToBytes(exportBlockSpecimen)
 	if err != nil {
 		return err
 	}
 	sHash := block.Hash().String()
 
-	log.Info("Creating Block Result Replication Event")
+	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
 		"block-result",
 		sHash,
 		blockResultRLP,
-		time.Now(),
 	})
 
-	log.Info("Creating Block Specimen Replication Event")
+	log.Info("Creating block-specimen replication event", "block number", block.NumberU64(), "hash", sHash)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
 		"block-specimen",
 		sHash,
 		blockSpecimenRLP,
-		time.Now(),
 	})
 
 	return nil
 }
 
-func (bc *BlockChain) createBlockResult(block *types.Block) (*types.ExportBlockResult, error) {
+func (bc *BlockChain) createBlockSpecimen(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.BlockSpecimen, error) {
+
+	bHash := block.Hash()
+	bNum := block.NumberU64()
+
+	//header
+	headerRLP := rawdb.ReadHeaderRLP(bc.db, bHash, bNum)
+	header := new(types.Header)
+	if err := rlp.Decode(bytes.NewReader(headerRLP), header); err != nil {
+		log.Error("Invalid block header RLP ", "hash ", bHash, "err ", err)
+		return nil, err
+	}
+
+	//transactions
+	txsExp := make([]*types.TransactionForExport, len(block.Transactions()))
+	txsRlp := make([]*types.TransactionExportRLP, len(block.Transactions()))
+	for i, tx := range block.Transactions() {
+		txsExp[i] = (*types.TransactionForExport)(tx)
+		txsRlp[i] = txsExp[i].ExportTx()
+	}
+
+	//uncles
+	uncles := block.Uncles()
+
+	//block specimen export
+	exportBlockSpecimen := &types.BlockSpecimen{
+		NetworkId:    config.ChainID.Uint64(),
+		Hash:         bHash,
+		Header:       header,
+		Transactions: txsRlp,
+		Uncles:       uncles,
+		State:        stateSpecimen,
+	}
+	return exportBlockSpecimen, nil
+}
+
+func (bc *BlockChain) createBlockResult(block *types.Block, config *params.ChainConfig) (*types.ExportBlockResult, error) {
 
 	bHash := block.Hash()
 	bNum := block.NumberU64()
@@ -113,6 +150,7 @@ func (bc *BlockChain) createBlockResult(block *types.Block) (*types.ExportBlockR
 
 	//block result export
 	exportBlockResult := &types.ExportBlockResult{
+		NetworkId:    config.ChainID.Uint64(),
 		Hash:         bHash,
 		TotalDiff:    td,
 		Header:       header,

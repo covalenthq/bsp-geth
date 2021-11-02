@@ -123,8 +123,8 @@ type StateDB struct {
 	AccountDeleted int
 	StorageDeleted int
 
-  // Log of state data read from backing DB
-	blockSpecimen *types.BlockSpecimen
+	// Log of state data read from backing DB
+	stateSpecimen *types.StateSpecimen
 }
 
 // New creates a new state from a given trie.
@@ -154,10 +154,10 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 			sdb.snapStorage = make(map[common.Hash]map[common.Hash][]byte)
 		}
 	}
-	if sdb.blockSpecimen != nil {
-		sdb.blockSpecimen = types.NewBlockSpecimen()
+	if sdb.stateSpecimen != nil {
+		sdb.stateSpecimen = types.NewStateSpecimen()
 	} else {
-		sdb.blockSpecimen = nil
+		sdb.stateSpecimen = nil
 	}
 	return sdb, nil
 }
@@ -560,8 +560,8 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 			return nil
 		}
 	}
-	if s.blockSpecimen != nil {
-		s.blockSpecimen.LogAccountRead(addr, data.Nonce, data.Balance, data.CodeHash)
+	if s.stateSpecimen != nil {
+		s.stateSpecimen.LogAccountRead(addr, data.Nonce, data.Balance, data.CodeHash)
 	}
 
 	// Insert into the live set
@@ -751,8 +751,8 @@ func (s *StateDB) Copy() *StateDB {
 			state.snapStorage[k] = temp
 		}
 	}
-	if state.blockSpecimen != nil {
-		state.blockSpecimen = state.blockSpecimen.Copy()
+	if state.stateSpecimen != nil {
+		state.stateSpecimen = state.stateSpecimen.Copy()
 	}
 	return state
 }
@@ -1062,11 +1062,11 @@ func (s *StateDB) SlotInAccessList(addr common.Address, slot common.Hash) (addre
 }
 
 func (self *StateDB) EnableStateSpecimenTracking() {
-	self.blockSpecimen = types.NewBlockSpecimen()
+	self.stateSpecimen = types.NewStateSpecimen()
 }
 
-func (self *StateDB) TakeStateSpecimen() *types.BlockSpecimen {
-	sS := self.blockSpecimen
-	self.blockSpecimen = nil
-	return sS
+func (self *StateDB) TakeStateSpecimen() *types.StateSpecimen {
+	sp := self.stateSpecimen
+	self.stateSpecimen = nil
+	return sp
 }

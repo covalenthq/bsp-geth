@@ -1235,6 +1235,7 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		for _, block := range blockChain {
 			if bc.txLookupLimit == 0 || ancientLimit <= bc.txLookupLimit || block.NumberU64() >= ancientLimit-bc.txLookupLimit {
 				rawdb.WriteTxLookupEntriesByBlock(batch, block)
+
 			} else if rawdb.ReadTxIndexTail(bc.db) != nil {
 				rawdb.WriteTxLookupEntriesByBlock(batch, block)
 			}
@@ -1917,7 +1918,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 				"uncles", len(block.Uncles()), "txs", len(block.Transactions()), "gas", block.GasUsed(),
 				"elapsed", common.PrettyDuration(time.Since(start)),
 				"root", block.Root())
-			bc.createBlockReplica(block, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
 			lastCanon = block
 
 			// Only count canonical blocks for GC processing time
@@ -1928,6 +1929,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
+			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
 
 		default:
 			// This in theory is impossible, but lets be nice to our future selves and leave
@@ -1936,6 +1938,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
+			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
 		}
 		stats.processed++
 		stats.usedGas += usedGas
