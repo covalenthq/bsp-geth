@@ -7,6 +7,7 @@ import (
 )
 
 type ExportBlockResult struct {
+	Type         string
 	NetworkId    uint64
 	Hash         common.Hash
 	TotalDiff    *big.Int

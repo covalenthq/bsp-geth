@@ -14,7 +14,6 @@ import (
 )
 
 type BlockReplicationEvent struct {
-	Type string
 	Hash string
 	Data []byte
 }
@@ -44,14 +43,12 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, config *params.Chai
 
 	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash, "result", exportBlockResult)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
-		"block-result",
 		sHash,
 		blockResultRLP,
 	})
 
 	log.Info("Creating block-specimen replication event", "block number", block.NumberU64(), "hash", sHash)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
-		"block-specimen",
 		sHash,
 		blockSpecimenRLP,
 	})
@@ -85,6 +82,7 @@ func (bc *BlockChain) createBlockSpecimen(block *types.Block, config *params.Cha
 
 	//block specimen export
 	exportBlockSpecimen := &types.BlockSpecimen{
+		Type:         "block-specimen",
 		NetworkId:    config.ChainID.Uint64(),
 		Hash:         bHash,
 		Header:       header,
@@ -150,6 +148,7 @@ func (bc *BlockChain) createBlockResult(block *types.Block, config *params.Chain
 
 	//block result export
 	exportBlockResult := &types.ExportBlockResult{
+		Type:         "block-result",
 		NetworkId:    config.ChainID.Uint64(),
 		Hash:         bHash,
 		TotalDiff:    td,

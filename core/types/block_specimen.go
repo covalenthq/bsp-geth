@@ -8,6 +8,7 @@ import (
 )
 
 type BlockSpecimen struct {
+	Type         string
 	NetworkId    uint64
 	Hash         common.Hash
 	Header       *Header
