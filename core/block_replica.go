@@ -42,7 +42,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, config *params.Chai
 	}
 	sHash := block.Hash().String()
 
-	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash, "result", exportBlockResult)
+	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
 		"block-result",
 		sHash,
