@@ -14,88 +14,34 @@ import (
 )
 
 type BlockReplicationEvent struct {
-	Type string
 	Hash string
 	Data []byte
 }
 
 func (bc *BlockChain) createBlockReplica(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) error {
-	//block result
-	exportBlockResult, err := bc.createBlockResult(block, config)
-	if err != nil {
-		return err
-	}
-	//block specimen
-	exportBlockSpecimen, err := bc.createBlockSpecimen(block, config, stateSpecimen)
+	//block replica
+	exportBlockReplica, err := bc.createReplica(block, config, stateSpecimen)
 	if err != nil {
 		return err
 	}
 	//encode to rlp
-	blockResultRLP, err := rlp.EncodeToBytes(exportBlockResult)
+	blockReplicaRLP, err := rlp.EncodeToBytes(exportBlockReplica)
 	if err != nil {
 		return err
 	}
-	//specimen encode to rlp
-	blockSpecimenRLP, err := rlp.EncodeToBytes(exportBlockSpecimen)
-	if err != nil {
-		return err
-	}
+
 	sHash := block.Hash().String()
 
-	log.Info("Creating block-result replication event", "block number", block.NumberU64(), "hash", sHash)
+	log.Info("Creating block replication event", "block number", block.NumberU64(), "hash", sHash)
 	bc.blockReplicationFeed.Send(BlockReplicationEvent{
-		"block-result",
 		sHash,
-		blockResultRLP,
-	})
-
-	log.Info("Creating block-specimen replication event", "block number", block.NumberU64(), "hash", sHash)
-	bc.blockReplicationFeed.Send(BlockReplicationEvent{
-		"block-specimen",
-		sHash,
-		blockSpecimenRLP,
+		blockReplicaRLP,
 	})
 
 	return nil
 }
 
-func (bc *BlockChain) createBlockSpecimen(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.BlockSpecimen, error) {
-
-	bHash := block.Hash()
-	bNum := block.NumberU64()
-
-	//header
-	headerRLP := rawdb.ReadHeaderRLP(bc.db, bHash, bNum)
-	header := new(types.Header)
-	if err := rlp.Decode(bytes.NewReader(headerRLP), header); err != nil {
-		log.Error("Invalid block header RLP ", "hash ", bHash, "err ", err)
-		return nil, err
-	}
-
-	//transactions
-	txsExp := make([]*types.TransactionForExport, len(block.Transactions()))
-	txsRlp := make([]*types.TransactionExportRLP, len(block.Transactions()))
-	for i, tx := range block.Transactions() {
-		txsExp[i] = (*types.TransactionForExport)(tx)
-		txsRlp[i] = txsExp[i].ExportTx()
-	}
-
-	//uncles
-	uncles := block.Uncles()
-
-	//block specimen export
-	exportBlockSpecimen := &types.BlockSpecimen{
-		NetworkId:    config.ChainID.Uint64(),
-		Hash:         bHash,
-		Header:       header,
-		Transactions: txsRlp,
-		Uncles:       uncles,
-		State:        stateSpecimen,
-	}
-	return exportBlockSpecimen, nil
-}
-
-func (bc *BlockChain) createBlockResult(block *types.Block, config *params.ChainConfig) (*types.ExportBlockResult, error) {
+func (bc *BlockChain) createReplica(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.ExportBlockReplica, error) {
 
 	bHash := block.Hash()
 	bNum := block.NumberU64()
@@ -148,18 +94,20 @@ func (bc *BlockChain) createBlockResult(block *types.Block, config *params.Chain
 	//uncles
 	uncles := block.Uncles()
 
-	//block result export
-	exportBlockResult := &types.ExportBlockResult{
+	//block specimen export
+	exportBlockReplica := &types.ExportBlockReplica{
+		Type:         "block-replica",
 		NetworkId:    config.ChainID.Uint64(),
 		Hash:         bHash,
 		TotalDiff:    td,
 		Header:       header,
 		Transactions: txsRlp,
-		Receipts:     receiptsRlp,
 		Uncles:       uncles,
+		Receipts:     receiptsRlp,
 		Senders:      senders,
+		State:        stateSpecimen,
 	}
-	return exportBlockResult, nil
+	return exportBlockReplica, nil
 }
 
 // SubscribeChainReplicationEvent registers a subscription of ChainReplicationEvent.

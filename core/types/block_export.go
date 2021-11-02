@@ -6,7 +6,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type ExportBlockResult struct {
+type ExportBlockReplica struct {
+	Type         string
 	NetworkId    uint64
 	Hash         common.Hash
 	TotalDiff    *big.Int
@@ -15,6 +16,7 @@ type ExportBlockResult struct {
 	Uncles       []*Header
 	Receipts     []*ReceiptExportRLP
 	Senders      []common.Address
+	State        *StateSpecimen
 }
 
 type LogsExportRLP struct {

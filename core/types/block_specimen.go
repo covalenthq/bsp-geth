@@ -7,15 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-type BlockSpecimen struct {
-	NetworkId    uint64
-	Hash         common.Hash
-	Header       *Header
-	Transactions []*TransactionExportRLP
-	Uncles       []*Header
-	State        *StateSpecimen
-}
-
 type StateSpecimen struct {
 	AccountRead []*accountRead
 	StorageRead []*storageRead
@@ -38,11 +29,6 @@ type storageRead struct {
 type codeRead struct {
 	Hash common.Hash
 	Code []byte
-}
-
-func NewBlockSpecimen() *BlockSpecimen {
-	bs := &BlockSpecimen{}
-	return bs
 }
 
 func NewStateSpecimen() *StateSpecimen {
