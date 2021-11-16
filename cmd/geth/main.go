@@ -154,6 +154,8 @@ var (
 		utils.IgnoreLegacyReceiptsFlag,
 		configFileFlag,
 		utils.BlockReplicationTargetsFlag,
+		utils.ReplicaEnableResultFlag,
+		utils.ReplicaEnableSpecimenFlag,
 	}, utils.NetworkFlags, utils.DatabasePathFlags)
 
 	rpcFlags = []cli.Flag{

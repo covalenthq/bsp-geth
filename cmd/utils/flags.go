@@ -779,6 +779,14 @@ var (
 		Usage: "Comma separated URLs for message-queue delivery of block specimens",
 		Value: "",
 	}
+	ReplicaEnableSpecimenFlag = &cli.BoolFlag{
+		Name:  "replica.specimen",
+		Usage: "Enables export of fields that comprise a block-specimen",
+	}
+	ReplicaEnableResultFlag = &cli.BoolFlag{
+		Name:  "replica.result",
+		Usage: "Enables export of fields that comprise a block-result",
+	}
 
 	// Network Settings
 	MaxPeersFlag = &cli.IntFlag{
@@ -2236,6 +2244,12 @@ func setBlockReplicationTargets(ctx *cli.Context, cfg *eth.Config) {
 			cfg.BlockReplicationTargets = append(cfg.BlockReplicationTargets, urlStr)
 		}
 	}
+	if ctx.Bool(ReplicaEnableSpecimenFlag.Name) {
+		cfg.ReplicaEnableSpecimen = true
+	}
+	if ctx.Bool(ReplicaEnableResultFlag.Name) {
+		cfg.ReplicaEnableResult = true
+	}
 }
 
 func CreateReplicators(config *eth.Config) []*core.ChainReplicator {
@@ -2254,7 +2268,7 @@ func CreateReplicators(config *eth.Config) []*core.ChainReplicator {
 
 func AttachReplicators(replicators []*core.ChainReplicator, chain *core.BlockChain) {
 	for _, replicator := range replicators {
-		replicator.Start(chain)
+		replicator.Start(chain, chain.ReplicaConfig)
 	}
 }
 

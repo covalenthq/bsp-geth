@@ -212,9 +212,13 @@ type BlockChain struct {
 	forker     *ForkChoice
 	vmConfig   vm.Config
 
-	shouldPreserve func(*types.Block) bool // Function used to determine whether should preserve the given block.
-
 	blockReplicationFeed event.Feed
+	ReplicaConfig        *ReplicaConfig
+}
+
+type ReplicaConfig struct {
+	EnableSpecimen bool
+	EnableResult   bool
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -241,16 +245,18 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 			Journal:   cacheConfig.TrieCleanJournal,
 			Preimages: cacheConfig.Preimages,
 		}),
-		quit:          make(chan struct{}),
-		chainmu:       syncx.NewClosableMutex(),
-		bodyCache:     bodyCache,
-		bodyRLPCache:  bodyRLPCache,
-		receiptsCache: receiptsCache,
-		blockCache:    blockCache,
-		txLookupCache: txLookupCache,
-		futureBlocks:  futureBlocks,
-		engine:        engine,
-		vmConfig:      vmConfig,
+		quit:                 make(chan struct{}),
+		chainmu:              syncx.NewClosableMutex(),
+		bodyCache:            bodyCache,
+		bodyRLPCache:         bodyRLPCache,
+		receiptsCache:        receiptsCache,
+		blockCache:           blockCache,
+		txLookupCache:        txLookupCache,
+		futureBlocks:         futureBlocks,
+		engine:               engine,
+		vmConfig:             vmConfig,
+		blockReplicationFeed: event.Feed{},
+		ReplicaConfig:        &ReplicaConfig{},
 	}
 	bc.forker = NewForkChoice(bc, shouldPreserve)
 	bc.validator = NewBlockValidator(chainConfig, bc, engine)
@@ -1706,7 +1712,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 				"uncles", len(block.Uncles()), "txs", len(block.Transactions()), "gas", block.GasUsed(),
 				"elapsed", common.PrettyDuration(time.Since(start)),
 				"root", block.Root())
-			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 			lastCanon = block
 
 			// Only count canonical blocks for GC processing time
@@ -1717,7 +1723,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
-			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 
 		default:
 			// This in theory is impossible, but lets be nice to our future selves and leave
@@ -1726,7 +1732,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
-			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 		}
 	}
 
