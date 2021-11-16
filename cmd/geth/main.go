@@ -151,6 +151,8 @@ var (
 		configFileFlag,
 		utils.CatalystFlag,
 		utils.BlockReplicationTargetsFlag,
+		utils.ReplicaEnableResultFlag,
+		utils.ReplicaEnableSpecimenFlag,
 	}
 
 	rpcFlags = []cli.Flag{

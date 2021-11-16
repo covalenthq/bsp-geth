@@ -97,6 +97,7 @@ type Ethereum struct {
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 
 	blockReplicators []*core.ChainReplicator
+	ReplicaConfig    *core.ReplicaConfig
 }
 
 // New creates a new Ethereum object (including the
@@ -157,6 +158,10 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		p2pServer:         stack.Server(),
 
 		blockReplicators: make([]*core.ChainReplicator, 0),
+		ReplicaConfig: &core.ReplicaConfig{
+			EnableSpecimen: config.ReplicaEnableSpecimen,
+			EnableResult:   config.ReplicaEnableResult,
+		},
 	}
 
 	for _, targets := range config.BlockReplicationTargets {
@@ -164,7 +169,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId)
+		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId, "export block-specimen", eth.ReplicaConfig.EnableSpecimen, "export block-result", eth.ReplicaConfig.EnableResult)
 		eth.blockReplicators = append(eth.blockReplicators, replicator)
 	}
 
@@ -214,7 +219,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	eth.bloomIndexer.Start(eth.blockchain)
 
 	for _, bRRepl := range eth.blockReplicators {
-		bRRepl.Start(eth.blockchain)
+		bRRepl.Start(eth.blockchain, eth.ReplicaConfig)
 	}
 
 	if config.TxPool.Journal != "" {

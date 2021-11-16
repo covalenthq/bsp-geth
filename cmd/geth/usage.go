@@ -172,6 +172,8 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.NodeKeyFileFlag,
 			utils.NodeKeyHexFlag,
 			utils.BlockReplicationTargetsFlag,
+			utils.ReplicaEnableResultFlag,
+			utils.ReplicaEnableSpecimenFlag,
 		},
 	},
 	{

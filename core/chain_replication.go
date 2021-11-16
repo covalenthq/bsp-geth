@@ -20,6 +20,8 @@ type ChainReplicationBackend interface {
 type ChainReplicatorChain interface {
 	// SubscribeChainReplicationEvent subscribes to new replication notifications.
 	SubscribeBlockReplicationEvent(ch chan<- BlockReplicationEvent) event.Subscription
+	// Set Block replica export types
+	SetBlockReplicaExports(replicaConfig *ReplicaConfig) bool
 }
 
 type ChainReplicator struct {
@@ -63,7 +65,7 @@ const (
 	modeStopping
 )
 
-func (c *ChainReplicator) Start(chain ChainReplicatorChain) {
+func (c *ChainReplicator) Start(chain ChainReplicatorChain, replicaConfig *ReplicaConfig) {
 	c.modeLock.Lock()
 	defer c.modeLock.Unlock()
 
@@ -75,6 +77,7 @@ func (c *ChainReplicator) Start(chain ChainReplicatorChain) {
 
 	bSEvents := make(chan BlockReplicationEvent, 1000)
 	bSSub := chain.SubscribeBlockReplicationEvent(bSEvents)
+	_ = chain.SetBlockReplicaExports(replicaConfig)
 	go c.eventLoop(bSEvents, bSSub)
 }
 

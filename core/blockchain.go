@@ -214,6 +214,12 @@ type BlockChain struct {
 	shouldPreserve func(*types.Block) bool // Function used to determine whether should preserve the given block.
 
 	blockReplicationFeed event.Feed
+	ReplicaConfig        *ReplicaConfig
+}
+
+type ReplicaConfig struct {
+	EnableSpecimen bool
+	EnableResult   bool
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -240,17 +246,19 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 			Journal:   cacheConfig.TrieCleanJournal,
 			Preimages: cacheConfig.Preimages,
 		}),
-		quit:           make(chan struct{}),
-		chainmu:        syncx.NewClosableMutex(),
-		shouldPreserve: shouldPreserve,
-		bodyCache:      bodyCache,
-		bodyRLPCache:   bodyRLPCache,
-		receiptsCache:  receiptsCache,
-		blockCache:     blockCache,
-		txLookupCache:  txLookupCache,
-		futureBlocks:   futureBlocks,
-		engine:         engine,
-		vmConfig:       vmConfig,
+		quit:                 make(chan struct{}),
+		chainmu:              syncx.NewClosableMutex(),
+		shouldPreserve:       shouldPreserve,
+		bodyCache:            bodyCache,
+		bodyRLPCache:         bodyRLPCache,
+		receiptsCache:        receiptsCache,
+		blockCache:           blockCache,
+		txLookupCache:        txLookupCache,
+		futureBlocks:         futureBlocks,
+		engine:               engine,
+		vmConfig:             vmConfig,
+		blockReplicationFeed: event.Feed{},
+		ReplicaConfig:        &ReplicaConfig{},
 	}
 	bc.validator = NewBlockValidator(chainConfig, bc, engine)
 	bc.prefetcher = newStatePrefetcher(chainConfig, bc, engine)
@@ -1918,7 +1926,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 				"uncles", len(block.Uncles()), "txs", len(block.Transactions()), "gas", block.GasUsed(),
 				"elapsed", common.PrettyDuration(time.Since(start)),
 				"root", block.Root())
-			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 			lastCanon = block
 
 			// Only count canonical blocks for GC processing time
@@ -1929,7 +1937,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
-			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 
 		default:
 			// This in theory is impossible, but lets be nice to our future selves and leave
@@ -1938,7 +1946,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, er
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
-			bc.createBlockReplica(block, bc.chainConfig, statedb.TakeStateSpecimen())
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 		}
 		stats.processed++
 		stats.usedGas += usedGas
