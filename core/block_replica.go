@@ -116,7 +116,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Type:         "block-specimen",
 			NetworkId:    chainConfig.ChainID.Uint64(),
 			Hash:         bHash,
-			TotalDiff:    nil,
+			TotalDiff:    &big.Int{},
 			Header:       header,
 			Transactions: txsRlp,
 			Uncles:       uncles,
@@ -137,7 +137,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Uncles:       uncles,
 			Receipts:     receiptsRlp,
 			Senders:      senders,
-			State:        nil,
+			State:        &types.StateSpecimen{},
 		}
 		log.Info("Exporting block-result only")
 		return exportBlockReplica, nil
