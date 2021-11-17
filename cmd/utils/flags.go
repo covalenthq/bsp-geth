@@ -1964,11 +1964,15 @@ func setBlockReplicationTargets(ctx *cli.Context, cfg *eth.Config) {
 			cfg.BlockReplicationTargets = append(cfg.BlockReplicationTargets, urlStr)
 		}
 	}
-	if ctx.GlobalBool(ReplicaEnableSpecimenFlag.Name) {
-		cfg.ReplicaEnableSpecimen = true
-	}
-	if ctx.GlobalBool(ReplicaEnableResultFlag.Name) {
-		cfg.ReplicaEnableResult = true
+	if ctx.GlobalIsSet(ReplicaEnableResultFlag.Name) || ctx.GlobalIsSet(ReplicaEnableSpecimenFlag.Name) {
+		if ctx.GlobalBool(ReplicaEnableSpecimenFlag.Name) {
+			cfg.ReplicaEnableSpecimen = true
+		}
+		if ctx.GlobalBool(ReplicaEnableResultFlag.Name) {
+			cfg.ReplicaEnableResult = true
+		}
+	} else {
+		Fatalf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
 	}
 }
 

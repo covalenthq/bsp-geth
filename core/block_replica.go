@@ -142,7 +142,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 		log.Info("Exporting block-result only")
 		return exportBlockReplica, nil
 	} else {
-		return nil, fmt.Errorf("please provide --replica.result and/or --replica.specimen flags at initialization to export those objects")
+		return nil, fmt.Errorf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
 	}
 }
 
