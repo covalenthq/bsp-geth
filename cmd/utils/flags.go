@@ -2244,11 +2244,15 @@ func setBlockReplicationTargets(ctx *cli.Context, cfg *eth.Config) {
 			cfg.BlockReplicationTargets = append(cfg.BlockReplicationTargets, urlStr)
 		}
 	}
-	if ctx.Bool(ReplicaEnableSpecimenFlag.Name) {
-		cfg.ReplicaEnableSpecimen = true
-	}
-	if ctx.Bool(ReplicaEnableResultFlag.Name) {
-		cfg.ReplicaEnableResult = true
+	if ctx.IsSet(ReplicaEnableResultFlag.Name) || ctx.IsSet(ReplicaEnableSpecimenFlag.Name) {
+		if ctx.Bool(ReplicaEnableSpecimenFlag.Name) {
+			cfg.ReplicaEnableSpecimen = true
+		}
+		if ctx.Bool(ReplicaEnableResultFlag.Name) {
+			cfg.ReplicaEnableResult = true
+		}
+	} else {
+		Fatalf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
 	}
 }
 
