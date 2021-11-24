@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -18,9 +19,9 @@ type BlockReplicationEvent struct {
 	Data []byte
 }
 
-func (bc *BlockChain) createBlockReplica(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) error {
+func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen) error {
 	//block replica
-	exportBlockReplica, err := bc.createReplica(block, config, stateSpecimen)
+	exportBlockReplica, err := bc.createReplica(block, replicaConfig, chainConfig, stateSpecimen)
 	if err != nil {
 		return err
 	}
@@ -41,7 +42,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, config *params.Chai
 	return nil
 }
 
-func (bc *BlockChain) createReplica(block *types.Block, config *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.ExportBlockReplica, error) {
+func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.ExportBlockReplica, error) {
 
 	bHash := block.Hash()
 	bNum := block.NumberU64()
@@ -94,23 +95,68 @@ func (bc *BlockChain) createReplica(block *types.Block, config *params.ChainConf
 	//uncles
 	uncles := block.Uncles()
 
-	//block specimen export
-	exportBlockReplica := &types.ExportBlockReplica{
-		Type:         "block-replica",
-		NetworkId:    config.ChainID.Uint64(),
-		Hash:         bHash,
-		TotalDiff:    td,
-		Header:       header,
-		Transactions: txsRlp,
-		Uncles:       uncles,
-		Receipts:     receiptsRlp,
-		Senders:      senders,
-		State:        stateSpecimen,
+	//block replica export
+	if replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
+		exportBlockReplica := &types.ExportBlockReplica{
+			Type:         "block-replica",
+			NetworkId:    chainConfig.ChainID.Uint64(),
+			Hash:         bHash,
+			TotalDiff:    td,
+			Header:       header,
+			Transactions: txsRlp,
+			Uncles:       uncles,
+			Receipts:     receiptsRlp,
+			Senders:      senders,
+			State:        stateSpecimen,
+		}
+		log.Debug("Exporting full block-replica")
+		return exportBlockReplica, nil
+	} else if replicaConfig.EnableSpecimen && !replicaConfig.EnableResult {
+		exportBlockReplica := &types.ExportBlockReplica{
+			Type:         "block-specimen",
+			NetworkId:    chainConfig.ChainID.Uint64(),
+			Hash:         bHash,
+			TotalDiff:    &big.Int{},
+			Header:       header,
+			Transactions: txsRlp,
+			Uncles:       uncles,
+			Receipts:     []*types.ReceiptExportRLP{},
+			Senders:      []common.Address{},
+			State:        stateSpecimen,
+		}
+		log.Debug("Exporting block-specimen only")
+		return exportBlockReplica, nil
+	} else if !replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
+		exportBlockReplica := &types.ExportBlockReplica{
+			Type:         "block-result",
+			NetworkId:    chainConfig.ChainID.Uint64(),
+			Hash:         bHash,
+			TotalDiff:    td,
+			Header:       header,
+			Transactions: txsRlp,
+			Uncles:       uncles,
+			Receipts:     receiptsRlp,
+			Senders:      senders,
+			State:        &types.StateSpecimen{},
+		}
+		log.Debug("Exporting block-result only")
+		return exportBlockReplica, nil
+	} else {
+		return nil, fmt.Errorf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
 	}
-	return exportBlockReplica, nil
 }
 
 // SubscribeChainReplicationEvent registers a subscription of ChainReplicationEvent.
 func (bc *BlockChain) SubscribeBlockReplicationEvent(ch chan<- BlockReplicationEvent) event.Subscription {
 	return bc.scope.Track(bc.blockReplicationFeed.Subscribe(ch))
+}
+
+func (bc *BlockChain) SetBlockReplicaExports(replicaConfig *ReplicaConfig) bool {
+	if replicaConfig.EnableResult {
+		bc.ReplicaConfig.EnableResult = true
+	}
+	if replicaConfig.EnableSpecimen {
+		bc.ReplicaConfig.EnableSpecimen = true
+	}
+	return true
 }
