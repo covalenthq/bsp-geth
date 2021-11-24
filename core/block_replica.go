@@ -109,7 +109,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Senders:      senders,
 			State:        stateSpecimen,
 		}
-		log.Info("Exporting full block-replica")
+		log.Debug("Exporting full block-replica")
 		return exportBlockReplica, nil
 	} else if replicaConfig.EnableSpecimen && !replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
@@ -124,7 +124,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Senders:      []common.Address{},
 			State:        stateSpecimen,
 		}
-		log.Info("Exporting block-specimen only")
+		log.Debug("Exporting block-specimen only")
 		return exportBlockReplica, nil
 	} else if !replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
@@ -139,7 +139,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Senders:      senders,
 			State:        &types.StateSpecimen{},
 		}
-		log.Info("Exporting block-result only")
+		log.Debug("Exporting block-result only")
 		return exportBlockReplica, nil
 	} else {
 		return nil, fmt.Errorf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
