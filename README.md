@@ -1,3 +1,154 @@
+# Block Specimen Producer (Go Ethereum)
+
+Essential to the Covalent Network is the Block Specimen Object (BSO) and the Block Specimen Producer (BSP), a bulk export method that ultimately leads to the generation of a canonical representation of a blockchains historical state. Currently implemented on existing blockchain clients running Geth. It functions currently as an -
+
+1. Blockchain data extractor
+1. Blockchain data normalizer
+
+What is ultimately created is a ‘Block Specimen’ (BSO), a universal canonical representation of a blockchains historical state.
+
+There are two further considerations regarding the Block Specimen.
+
+1. The BSP is completely standalone on forks of Geth.
+1. The separation of data storage layer from the block execution and distributed consensus functionality leads to better segregation and upgrades of functionality in the blockhain data processing pipeline.
+
+As a result, anyone can run full tracing on the block specimen and accurately recreate the blockchain without access to a blockchain client software.
+
+Production of Block Specimen Objects (BSOs) forms the core of the network’s data objects specification. These objects are created with the aid of three main pieces of open-source software provided by Covalent for the network’s decentralized stack.
+
+1. [Block Specimen Producer (BSP) - Operator run & deployed](https://github.com/covalenthq/go-ethereum)
+
+1. [BSP Agent - Operator run & deployed](https://github.com/covalenthq/mq-store-agent)
+
+1. [BSP Proof-chain - Covalent operated & pre-deployed](https://github.com/covalenthq/cqt-virtnet)
+
+Please refer to these [instructions](https://docs.google.com/document/d/1BMC9-VXZfpB6mGczSu8ylUXJZ_CIx4ephepDtlruv_Q/edit?usp=sharing) for running the BSP with the mq-store-agent (BSP Agent).
+
+Please refer to this [whitepaper](https://docs.google.com/document/d/1J6RalVVfMSh2kSKNHM3Agb4GngzWVw9e1PqLSVb3-PU/edit#) to understand more about its function.
+
+BSP workshop [deck](https://docs.google.com/presentation/d/1qInReJcMxvVywJ8onoFPoKCwuorJ8LpOn3hwLJIl7bg/edit?usp=sharing) for BSP operators.
+
+## Raison d'être
+
+The blockchain space has been and will continue to be laser-focused on *write* scalability. That is, actually writing on the blockchain (confirming a transaction) and doing so efficiently. And the projects tackling this issue, be it Layer 1s or Layer 2s, have certainly made operating in this space more accommodating, leading to increased adoption as powerful and scalable applications are being developed.
+
+However, this is only one side of the scalability issue that troubles the space. On the flip side you have the issue of *read scalability*. This is different to *write* as the focus with *read* is on extracting and reading the data on the blockchain, whether that be Ethereum, Avalanche or Solana.
+
+One common method of reading data from Ethereum for example is the JSON RPC Layer. A number of issues present themselves however when doing so.
+
+- **Slow**: One needs to make a series of individual data queries to extract the block and its constituent elements like transactions and receipts.
+- **Not Multiversion**: Multiversion concurrency control methods are traditionally employed in databases to ensure point-in-time consistent views if multiple parties are viewing or querying the database. Such methods do not exist in web3.
+- **Expensive**: To access historical data at any point in time, you need to run your blockchain clients in a mode known as “full archive nodes” - which requires specialized and expensive hardware to scale.
+- **The Purge:** For Ethereum specifically, Vitalik recently outlined an updated roadmap for its development which included a phase titled ‘The Purge’. Once this phase is implemented, clients will no longer store historical data older than a year. Hence, alternatives will be needed to access Ethereums full historical state.
+
+Meanwhile, data mappers and static dashboards are great for examining specific metrics and small tables (so long as the smart contract is decoded) but lack flexibility and scalability. Our belief is that -
+
+1. fast, cheap and accessible read capabilities will lead to more diverse and better-adapted blockchain technologies.
+
+1. should be accessible to all, no matter the skill level.
+
+The Block Specimen is **the solution** to tackle the read scalability issues that currently plague blockchains.
+
+## Architecture
+
+![diagram](arch.jpg)
+
+While BSOs are currently being created internally at Covalent for each respective blockchain indexed, the Covalent Network shifts this responsibility to operators (anyone performing a role on the Covalent Network). Any operator on the network will be able to opt in to act as a Block Specimen Producer (BSP).
+
+To ensure that the data within the block-specimens that operators create is reliable and honest, a production proof is created for every BSO produced. These will be published to proofing contract deployed by Covalent. Therefore, BSO proofs can be compared and any deviations in the data either accidentally or malicious will have mismatching proofs.
+
+In sum, it is the responsibility of the BSPs to consume blocks from external blockchains and publish both the BSP along with a production proof to the Covalent virtual chain. BSPs play a pivotal role in the network given that the data in the BSO will feed the entire network with the data needed to answer user queries.Of course, operators who successfully perform this role will be compensated in CQT.
+
+## Build & Run
+
+Clone the `covalenthq/go-ethereum` repo and checkout the branch that contains the block specimen patch aka `covalent`
+
+```bash
+git clone git@github.com:covalenthq/go-ethereum.git
+cd go-ethereum
+git checkout covalent
+```
+
+Build `geth` from source (install `Go` if you don’t have it) and other geth developer tools from root (if you need all the geth related development tools do a `make all`)
+
+```bash
+make geth
+```
+
+Start redis (our streaming service) with the following.
+
+```bash
+brew services start redis          
+Successfully started `redis` (label: homebrew.mxcl.redis)
+```
+
+Start redis-cli in a separate terminal so you can see the encoded bsps as they are fed into redis streams.
+
+```bash
+redis-cli                          
+127.0.0.1:6379>
+```
+
+We are now ready to start accepting stream message into redis locally
+
+Now start `geth` from root with the given configuration, here we specify the replication targets (block specimen targets) with redis stream topic key `replication`, running `geth` in full `syncmode`, exposing the http port for the geth apis are optional.
+
+Prior to executing, please replace `<user>` with correct local username within the `--datadir` flag. Everything else remains the same as given below.
+
+```bash
+./build/bin/geth \
+  --mainnet \
+  --port 0 \
+  --log.debug \
+  --syncmode full \
+  --datadir /Users/<user>/Library/Ethereum/bsp/ \
+  --replication.targets "redis://localhost:6379/?topic=replication" \
+  --replica.result \
+  --replica.specimen
+```
+
+Expect to see the following logs in approx ~ 10 mins as the node begins to sync and export BSOs
+
+```log
+blocks=1 txs=0 mgas=0.000 elapsed=12.947ms    mgasps=0.000 number=3 hash=3d6122..8cf741 age=6y4mo1w  dirty=8.92KiB
+INFO [11-18|17:24:35.977|core/block_replica.go:112]        Exporting full block-replica
+INFO [11-18|17:24:35.977|core/block_replica.go:36]         Creating block replication event         block number=41042 hash=0x0b8706384cf93820c7f8fe72b5463e756d917c94b0df98f850820593b9422b09
+```
+
+The last two lines above show that new block replicas containing the block specimens are being produced and streamed to the redis topic “replication”.
+
+Please note it may take anywhere from 2-10 mins to reach this point depending on the strength of the network and other factors that affect the Ethereum network p2p protocol performance.
+
+After this you can check that redis is stacking up the bsp messages through the redis-cli with the command below (this should give you a bunch of messages from the stream)
+
+```bash
+127.0.0.1:6379>  XREAD COUNT 4 STREAMS replication 0-0
+```
+
+If it doesn’t - the BSP - producer isn't producing messages! In this case please look at the logs above and see if you have any WARN / DEBUG logs that can be responsible for the inoperation.
+
+### Flag definitions
+
+`--mainnet` - lets geth know which network to synchronize with, and pull block specimen object from, this can be `--ropsten`,  `--goerli` , `--mainnet` etc
+
+`--port 0` - will auto-assign a port for geth to talk to other nodes in the network, but this may not work if you are behind a firewall. It would be better to explicitly assign a port and to ensure that port is open to any firewalls.
+
+`--http` - enables the json-rpc api over http
+
+`--log.debug` - enables a detailed log of the processes geth deals with going back and forth between
+
+`--syncmode full` - this flag is used to enable different syncing strategies for geth and a fully sync allows us to execute every block from block 0
+
+`--datadir` - specifies a local datadir path for geth (note we use “BSP” as the directory name with the Ethereum directory), this way we don’t overwrite or touch other previously synced geth libraries across other chains
+
+`--replication.targets` - this flag lets the BSP know where and how to send the BSP messages (this flag will not function without the usage of either one or both of the flags below, if both are selected a full block-replica is exported
+
+`--replica.result` - this flag lets the BSP know if all fields related to the block-result specification need to be exported (if only this flag is selected the exported object is a block-result)
+
+`--replica.specimen` -  this flag lets the BSP know if all fields related to the block-specimen specification need to be exported (if only this flag is selected the exported object is a block-specimen)
+
+If both `--replica-result` & `--replica-specimen` are selected then a `block-replica` is exported containing all the fields for exporting any block fully alongwith its stored state.
+
 ## Go Ethereum
 
 Official Golang implementation of the Ethereum protocol.
