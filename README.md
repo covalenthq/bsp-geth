@@ -1,11 +1,44 @@
-# Block Specimen Producer (Go Ethereum)
+![banner](./docs/covalent.jpg)
+
+<div align="center">
+  <a href="https://github.com/covalenthq/mq-store-agent/releases/latest">
+    <img alt="Version" src="https://img.shields.io/badge/tag-v0.9.8-orange" />
+  </a>
+  <a href="https://github.com/covalenthq/go-ethereum/blob/main/LICENSE">
+    <img alt="License: " src="https://img.shields.io/badge/license-MIT-green" />
+  </a>
+  <a href="https://goreportcard.com/report/github.com/go-ethereum">
+    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/"/>
+  </a>
+  <a href="http://covalenthq.com/discord">
+    <img alt="Discord" src="https://img.shields.io/badge/discord-join%20chat-blue.svg" />
+  </a>
+</div>
+<div align="center">
+  <a href="http://covalenthq.com/discord">
+    <img alt="Discord" src="https://img.shields.io/discord/715804406842392586.svg" />
+  </a>
+  <!-- <a href="https://github.com/go-ethereum/actions/workflows/golangci-lint.yml?query=branch%3Amain+workflow%3Agolangci-lint">
+    <img alt="Lint Status" src="https://github.com/go-ethereum/actions/workflows/golangci-lint.yml/badge.svg?branch=main" />
+  </a>
+  <a href="https://github.com/go-ethereum/actions/workflows/docker-image.yml?query=branch%3Amain+workflow%3Adocker-image-ci">
+    <img alt="CI Status" src="https://github.com/go-ethereum/actions/workflows/docker-image.yml/badge.svg?branch=main" />
+  </a> -->
+  <a href="https://twitter.com/@Covalent_HQ">
+    <img alt="Twitter Follow Covalent" src="https://img.shields.io/twitter/follow/Covalent_HQ"/>
+  </a>
+</div>
+
+# Block Specimen Producer (BSP Geth)
 
 * [Introduction](#bsp_intro)
   * [Resources](#bsp_resources)
+* [Raison d'être](#bsp_why)
 * [Architecture](#bsp_arch)
 * [Build & Run](#build_run)
   * [Flag Definitions](#flag_definitions)
-* [Contributing](CONTRIBUTING.md)
+* [Contributing](./docs/CONTRIBUTING.md)
+* [Go Ethereum](#geth)
 
 ## <span id="bsp_intro">Introduction</span>
 
@@ -27,11 +60,11 @@ As a result, anyone can run full tracing on the block specimen and accurately re
 
 Production of Block Specimen Objects (BSOs) forms the core of the network’s data objects specification. These objects are created with the aid of three main pieces of open-source software provided by Covalent for the network’s decentralized stack.
 
-1. [Block Specimen Producer (BSP) - Operator run & deployed](https://github.com/covalenthq/go-ethereum)
+1. [Block Specimen Producer (BSP Geth)](https://github.com/covalenthq/go-ethereum) - Operator run & deployed
 
-1. [BSP Agent - Operator run & deployed](https://github.com/covalenthq/mq-store-agent)
+1. [BSP Agent](https://github.com/covalenthq/mq-store-agent) - Operator run & deployed
 
-1. [BSP Proof-chain - Covalent operated & pre-deployed](https://github.com/covalenthq/cqt-virtnet)
+1. [BSP Proof-chain](https://github.com/covalenthq/cqt-virtnet) - Covalent operated & pre-deployed
 
 Please refer to these [instructions](https://docs.google.com/document/d/1BMC9-VXZfpB6mGczSu8ylUXJZ_CIx4ephepDtlruv_Q/edit?usp=sharing) for running the BSP with the mq-store-agent (BSP Agent).
 
@@ -49,8 +82,11 @@ However, this is only one side of the scalability issue that troubles the space.
 One common method of reading data from Ethereum for example is the JSON RPC Layer. A number of issues present themselves however when doing so.
 
 - **Slow**: One needs to make a series of individual data queries to extract the block and its constituent elements like transactions and receipts.
+
 - **Not Multiversion**: Multiversion concurrency control methods are traditionally employed in databases to ensure point-in-time consistent views if multiple parties are viewing or querying the database. Such methods do not exist in web3.
+
 - **Expensive**: To access historical data at any point in time, you need to run your blockchain clients in a mode known as “full archive nodes” - which requires specialized and expensive hardware to scale.
+
 - **The Purge:** For Ethereum specifically, Vitalik recently outlined an updated roadmap for its development which included a phase titled ‘The Purge’. Once this phase is implemented, clients will no longer store historical data older than a year. Hence, alternatives will be needed to access Ethereums full historical state.
 
 Meanwhile, data mappers and static dashboards are great for examining specific metrics and small tables (so long as the smart contract is decoded) but lack flexibility and scalability. Our belief is that -
@@ -63,13 +99,20 @@ The Block Specimen is **the solution** to tackle the read scalability issues tha
 
 ## <span id="bsp_arch">Architecture</span>
 
-![diagram](arch.jpg)
+![diagram](./docs/arch.jpg)
 
 While BSOs are currently being created internally at Covalent for each respective blockchain indexed, the Covalent Network shifts this responsibility to operators (anyone performing a role on the Covalent Network). Any operator on the network will be able to opt in to act as a Block Specimen Producer (BSP).
 
 To ensure that the data within the block-specimens that operators create is reliable and honest, a production proof is created for every BSO produced. These will be published to proofing contract deployed by Covalent. Therefore, BSO proofs can be compared and any deviations in the data either accidentally or malicious will have mismatching proofs.
 
-In sum, it is the responsibility of the BSPs to consume blocks from external blockchains and publish both the BSP along with a production proof to the Covalent virtual chain. BSPs play a pivotal role in the network given that the data in the BSO will feed the entire network with the data needed to answer user queries.Of course, operators who successfully perform this role will be compensated in CQT.
+
+![diagram](./docs/value.png)
+
+In sum, it is the responsibility of the BSPs to consume blocks from external blockchains and publish both the BSP along with a production proof to the Covalent virtual chain. As the network is developed, Covalent will be shifting the responsibility of running the Block Specimen software to operators (anyone performing a role on the Covalent Network). These Block Specimens will consume blocks from external blockchains and feed the entire network with the data needed to answer user queries.
+
+How does this create and accrue value for the Covalent Network? As Block Specimens publish more data to Covalent Network, developers will be attracted. With a growing developer base on the Covalent Network, there will be a greater appetite for blockchain data. And hence, the cycle begins again, with Block Specimens expected to meet this demand for data.
+Of course, operators who successfully perform this role will be compensated in CQT.
+
 
 ## <span id="build_run">Build & Run</span>
 
@@ -161,7 +204,7 @@ If it doesn’t - the BSP - producer isn't producing messages! In this case plea
 
 If both `--replica-result` & `--replica-specimen` are selected then a `block-replica` is exported containing all the fields for exporting any block fully alongwith its stored state.
 
-## Go Ethereum
+## <span id="geth">Go Ethereum</span>
 
 Official Golang implementation of the Ethereum protocol.
 
