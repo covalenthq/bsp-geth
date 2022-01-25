@@ -1,5 +1,14 @@
 # Block Specimen Producer (Go Ethereum)
 
+* [Introduction](#bsp_intro)
+  * [Resources](#bsp_resources)
+* [Architecture](#bsp_arch)
+* [Build & Run](#build_run)
+  * [Flag Definitions](#flag_definitions)
+* [Contributing](CONTRIBUTING.md)
+
+## <span id="bsp_intro">Introduction</span>
+
 Essential to the Covalent Network is the Block Specimen Object (BSO) and the Block Specimen Producer (BSP), a bulk export method that ultimately leads to the generation of a canonical representation of a blockchains historical state. Currently implemented on existing blockchain clients running Geth. It functions currently as an -
 
 1. Blockchain data extractor
@@ -13,6 +22,8 @@ There are two further considerations regarding the Block Specimen.
 1. The separation of data storage layer from the block execution and distributed consensus functionality leads to better segregation and upgrades of functionality in the blockhain data processing pipeline.
 
 As a result, anyone can run full tracing on the block specimen and accurately recreate the blockchain without access to a blockchain client software.
+
+## <span id="bsp_resources">Resources</span>
 
 Production of Block Specimen Objects (BSOs) forms the core of the network’s data objects specification. These objects are created with the aid of three main pieces of open-source software provided by Covalent for the network’s decentralized stack.
 
@@ -28,7 +39,8 @@ Please refer to this [whitepaper](https://docs.google.com/document/d/1J6RalVVfMS
 
 BSP workshop [deck](https://docs.google.com/presentation/d/1qInReJcMxvVywJ8onoFPoKCwuorJ8LpOn3hwLJIl7bg/edit?usp=sharing) for BSP operators.
 
-## Raison d'être
+## <span id="bsp_why">Raison d'être</span>
+
 
 The blockchain space has been and will continue to be laser-focused on *write* scalability. That is, actually writing on the blockchain (confirming a transaction) and doing so efficiently. And the projects tackling this issue, be it Layer 1s or Layer 2s, have certainly made operating in this space more accommodating, leading to increased adoption as powerful and scalable applications are being developed.
 
@@ -49,7 +61,7 @@ Meanwhile, data mappers and static dashboards are great for examining specific m
 
 The Block Specimen is **the solution** to tackle the read scalability issues that currently plague blockchains.
 
-## Architecture
+## <span id="bsp_arch">Architecture</span>
 
 ![diagram](arch.jpg)
 
@@ -59,7 +71,7 @@ To ensure that the data within the block-specimens that operators create is reli
 
 In sum, it is the responsibility of the BSPs to consume blocks from external blockchains and publish both the BSP along with a production proof to the Covalent virtual chain. BSPs play a pivotal role in the network given that the data in the BSO will feed the entire network with the data needed to answer user queries.Of course, operators who successfully perform this role will be compensated in CQT.
 
-## Build & Run
+## <span id="build_run">Build & Run</span>
 
 Clone the `covalenthq/go-ethereum` repo and checkout the branch that contains the block specimen patch aka `covalent`
 
@@ -127,7 +139,7 @@ After this you can check that redis is stacking up the bsp messages through the 
 
 If it doesn’t - the BSP - producer isn't producing messages! In this case please look at the logs above and see if you have any WARN / DEBUG logs that can be responsible for the inoperation.
 
-### Flag definitions
+### <span id="flag_definitions">Flag definitions</span>
 
 `--mainnet` - lets geth know which network to synchronize with, and pull block specimen object from, this can be `--ropsten`,  `--goerli` , `--mainnet` etc
 
