@@ -2,27 +2,30 @@
 
 <div align="center">
   <a href="https://github.com/covalenthq/mq-store-agent/releases/latest">
-    <img alt="Version" src="https://img.shields.io/badge/tag-v0.9.8-orange" />
+    <img alt="Version" src="https://img.shields.io/badge/tag-v1.0.0-yellowgreen" />
   </a>
   <a href="https://github.com/covalenthq/go-ethereum/blob/main/LICENSE">
     <img alt="License: " src="https://img.shields.io/badge/license-MIT-green" />
   </a>
-  <a href="https://goreportcard.com/report/github.com/go-ethereum">
+  <a href="https://goreportcard.com/report/github.com/covalenthq/go-ethereum">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/"/>
   </a>
   <a href="http://covalenthq.com/discord">
     <img alt="Discord" src="https://img.shields.io/badge/discord-join%20chat-blue.svg" />
   </a>
+  <!-- <a href="https://bestpractices.coreinfrastructure.org/projects/0000">
+    <img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/covalenthq/go-ethereum">
+  </a> -->
 </div>
 <div align="center">
   <a href="http://covalenthq.com/discord">
     <img alt="Discord" src="https://img.shields.io/discord/715804406842392586.svg" />
   </a>
-  <!-- <a href="https://github.com/go-ethereum/actions/workflows/golangci-lint.yml?query=branch%3Amain+workflow%3Agolangci-lint">
-    <img alt="Lint Status" src="https://github.com/go-ethereum/actions/workflows/golangci-lint.yml/badge.svg?branch=main" />
+  <!-- <a href="https://github.com/covalenthq/go-ethereum/actions/workflows/golangci-lint.yml?query=branch%3Amain+workflow%3Agolangci-lint">
+    <img alt="Lint Status" src="https://github.com/covalenthq/go-ethereum/actions/workflows/golangci-lint.yml/badge.svg?branch=main" />
   </a>
-  <a href="https://github.com/go-ethereum/actions/workflows/docker-image.yml?query=branch%3Amain+workflow%3Adocker-image-ci">
-    <img alt="CI Status" src="https://github.com/go-ethereum/actions/workflows/docker-image.yml/badge.svg?branch=main" />
+  <a href="https://github.com/covalenthq/go-ethereum/actions/workflows/docker-image.yml?query=branch%3Amain+workflow%3Adocker-image-ci">
+    <img alt="CI Status" src="https://github.com/covalenthq/go-ethereum/actions/workflows/docker-image.yml/badge.svg?branch=main" />
   </a> -->
   <a href="https://twitter.com/@Covalent_HQ">
     <img alt="Twitter Follow Covalent" src="https://img.shields.io/twitter/follow/Covalent_HQ"/>
@@ -42,12 +45,12 @@
 
 ## <span id="bsp_intro">Introduction</span>
 
-Essential to the Covalent Network is the Block Specimen Object (BSO) and the Block Specimen Producer (BSP), a bulk export method that ultimately leads to the generation of a canonical representation of a blockchains historical state. Currently implemented on existing blockchain clients running Geth. It functions currently as an -
+Essential to the Covalent Network is the Block Specimen and the Block Specimen Producer (BSP), a bulk export method that ultimately leads to the generation of a canonical representation of a blockchains historical state. Currently implemented on existing blockchain clients running Geth. It functions currently as an -
 
 1. Blockchain data extractor
 1. Blockchain data normalizer
 
-What is ultimately created is a ‘Block Specimen’ (BSO), a universal canonical representation of a blockchains historical state.
+What is ultimately created is a ‘Block Specimen’, a universal canonical representation of a blockchains historical state.
 
 There are two further considerations regarding the Block Specimen.
 
@@ -58,7 +61,7 @@ As a result, anyone can run full tracing on the block specimen and accurately re
 
 ## <span id="bsp_resources">Resources</span>
 
-Production of Block Specimen Objects (BSOs) forms the core of the network’s data objects specification. These objects are created with the aid of three main pieces of open-source software provided by Covalent for the network’s decentralized stack.
+Production of Block Specimens forms the core of the network’s data objects specification. These objects are created with the aid of three main pieces of open-source software provided by Covalent for the network’s decentralized stack.
 
 1. [Block Specimen Producer (BSP Geth)](https://github.com/covalenthq/go-ethereum) - Operator run & deployed
 
@@ -68,9 +71,8 @@ Production of Block Specimen Objects (BSOs) forms the core of the network’s da
 
 Please refer to these [instructions](https://docs.google.com/document/d/1BMC9-VXZfpB6mGczSu8ylUXJZ_CIx4ephepDtlruv_Q/edit?usp=sharing) for running the BSP with the mq-store-agent (BSP Agent).
 
-Please refer to this [whitepaper](https://docs.google.com/document/d/1J6RalVVfMSh2kSKNHM3Agb4GngzWVw9e1PqLSVb3-PU/edit#) to understand more about its function.
+Please refer to this [whitepaper](https://www.covalenthq.com/static/documents/Block%20Specimen%20Whitepaper%20V1.1.pdf) to understand more about its function.
 
-BSP workshop [deck](https://docs.google.com/presentation/d/1qInReJcMxvVywJ8onoFPoKCwuorJ8LpOn3hwLJIl7bg/edit?usp=sharing) for BSP operators.
 
 ## <span id="bsp_why">Raison d'être</span>
 
@@ -101,16 +103,16 @@ The Block Specimen is **the solution** to tackle the read scalability issues tha
 
 ![diagram](./docs/arch.jpg)
 
-While BSOs are currently being created internally at Covalent for each respective blockchain indexed, the Covalent Network shifts this responsibility to operators (anyone performing a role on the Covalent Network). Any operator on the network will be able to opt in to act as a Block Specimen Producer (BSP).
+While Block Specimens are currently being created internally at Covalent for each respective blockchain indexed, the Covalent Network shifts this responsibility to operators (anyone performing a role on the Covalent Network). Any operator on the network will be able to opt in to act as a Block Specimen Producer (BSP).
 
-To ensure that the data within the block-specimens that operators create is reliable and honest, a production proof is created for every BSO produced. These will be published to proofing contract deployed by Covalent. Therefore, BSO proofs can be compared and any deviations in the data either accidentally or malicious will have mismatching proofs.
+To ensure that the data within the block-specimens that operators create is reliable and honest, a production proof is created for every Block Specimen produced. These will be published to proofing contract deployed by Covalent. Therefore, Block Specimen proofs can be compared and any deviations in the data either accidentally or malicious will have mismatching proofs.
 
 
 ![diagram](./docs/value.png)
 
 In sum, it is the responsibility of the BSPs to consume blocks from external blockchains and publish both the BSP along with a production proof to the Covalent virtual chain. As the network is developed, Covalent will be shifting the responsibility of running the Block Specimen software to operators (anyone performing a role on the Covalent Network). These Block Specimens will consume blocks from external blockchains and feed the entire network with the data needed to answer user queries.
 
-How does this create and accrue value for the Covalent Network? As Block Specimens publish more data to Covalent Network, developers will be attracted. With a growing developer base on the Covalent Network, there will be a greater appetite for blockchain data. And hence, the cycle begins again, with Block Specimens expected to meet this demand for data.
+How does this create and accrue value for the Covalent Network? As Block Specimen Producers publish more data to Covalent Network, developers will be attracted. With a growing developer base on the Covalent Network, there will be a greater appetite for blockchain data. And hence, the cycle begins again, with Block Specimens expected to meet this demand for data.
 Of course, operators who successfully perform this role will be compensated in CQT.
 
 
@@ -162,7 +164,7 @@ Prior to executing, please replace `<user>` with correct local username within t
   --replica.specimen
 ```
 
-Expect to see the following logs in approx ~ 10 mins as the node begins to sync and export BSOs
+Expect to see the following logs in approx ~ 10 mins as the node begins to sync and export Block Specimens
 
 ```log
 blocks=1 txs=0 mgas=0.000 elapsed=12.947ms    mgasps=0.000 number=3 hash=3d6122..8cf741 age=6y4mo1w  dirty=8.92KiB
@@ -184,7 +186,7 @@ If it doesn’t - the BSP - producer isn't producing messages! In this case plea
 
 ### <span id="flag_definitions">Flag definitions</span>
 
-`--mainnet` - lets geth know which network to synchronize with, and pull block specimen object from, this can be `--ropsten`,  `--goerli` , `--mainnet` etc
+`--mainnet` - lets geth know which network to synchronize with, and pull block specimen from, this can be `--ropsten`,  `--goerli` , `--mainnet` etc
 
 `--port 0` - will auto-assign a port for geth to talk to other nodes in the network, but this may not work if you are behind a firewall. It would be better to explicitly assign a port and to ensure that port is open to any firewalls.
 
