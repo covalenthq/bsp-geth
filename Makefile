@@ -42,6 +42,17 @@ clean:
 	env GO111MODULE=on go clean -cache
 	rm -fr build/_workspace/pkg/ $(GOBIN)/*
 
+run-geth-bsp:
+	./build/bin/geth \
+  --mainnet \
+  --port 0 \
+  --log.debug \
+  --syncmode full \
+  --datadir /Users/pranay/Library/Ethereum/workshop/ \
+  --replication.targets "redis://localhost:6379/?topic=replication" \
+  --replica.result \
+  --replica.specimen
+
 # The devtools target installs tools required for 'go generate'.
 # You need to put $GOBIN (or $GOPATH/bin) in your PATH to use 'go generate'.
 
