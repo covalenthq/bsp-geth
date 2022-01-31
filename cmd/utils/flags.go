@@ -1752,7 +1752,9 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	setMiner(ctx, &cfg.Miner)
 	setRequiredBlocks(ctx, cfg)
 	setLes(ctx, cfg)
-	setBlockReplicationTargets(ctx, cfg)
+	if ctx.GlobalIsSet(BlockReplicationTargetsFlag.Name) {
+		setBlockReplicationTargets(ctx, cfg)
+	}
 
 	// Cap the cache allowance and tune the garbage collector
 	mem, err := gopsutil.VirtualMemory()
