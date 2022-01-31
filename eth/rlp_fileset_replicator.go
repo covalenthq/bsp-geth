@@ -93,7 +93,7 @@ func (r *RLPFileSetReplicator) Process(ctx context.Context, events []*core.Block
 			return
 		}
 
-		compRlpData = snappy.Encode(r.compBuf, []byte(rlpData))
+		compRlpData = snappy.Encode(r.compBuf, rlpData)
 
 		bytesWrittenForEvent, err = r.chunkFile.Write(compRlpData)
 		if err != nil {
