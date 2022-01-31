@@ -2,12 +2,12 @@ name: golangci-lint
 
 on:
   push:
-    tags:
-      - v*
-    branches:
-      - master
-      - main
+    branches: 
+      - covalent 
   pull_request:
+    branches:
+      - covalent
+
 permissions:
   contents: read
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
