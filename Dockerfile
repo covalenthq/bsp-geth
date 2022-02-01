@@ -2,6 +2,8 @@
 # ARG COMMIT=""
 # ARG VERSION=""
 # ARG BUILDNUM=""
+ARG USER=$USER
+
 
 # Build Geth in a stock Go builder container
 FROM golang:1.18-alpine as builder
@@ -24,7 +26,8 @@ RUN apk add --no-cache ca-certificates=20211220-r0
 COPY --from=builder /go-ethereum/build/bin/geth /usr/local/bin/
 
 EXPOSE 8545 8546 30303 30303/udp
-ENTRYPOINT ["geth"]
+
+ENTRYPOINT ["geth", "--mainnet", "--port", "0", "--log.debug", "--syncmode", "full", "--datadir", "/root/.ethereum/covalent", "--replication.targets", "redis://localhost:6379/?topic=replication", "--replica.result", "--replica.specimen"]
 
 # Add some metadata labels to help programatic image consumption
 ARG COMMIT=""
