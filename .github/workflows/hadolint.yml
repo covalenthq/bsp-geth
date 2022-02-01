@@ -3,10 +3,10 @@ name: dockerfile-lint
 on:
   push:
     branches: 
-      - main 
+      - covalent
   pull_request:
     branches:
-      - main
+      - covalent
 
 jobs:
   linter:
