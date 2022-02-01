@@ -172,7 +172,7 @@ func TestAndroid(t *testing.T) {
 	}
 	if _, err := exec.Command("which", "gomobile").CombinedOutput(); err != nil {
 		t.Log("gomobile missing, installing it...")
-		if out, err := exec.Command("go", "get", "golang.org/x/mobile/cmd/gomobile").CombinedOutput(); err != nil {
+		if out, err := exec.Command("GO111MODULE=off", "go", "get", "golang.org/x/mobile/cmd/gomobile").CombinedOutput(); err != nil {
 			t.Fatalf("install failed: %v\n%s", err, string(out))
 		}
 		t.Log("initializing gomobile...")
