@@ -11,6 +11,7 @@
 GOBIN = ./build/bin
 GO ?= latest
 GORUN = env GO111MODULE=on go run
+U = $(USER)
 
 geth:
 	$(GORUN) build/ci.go install ./cmd/geth
@@ -48,7 +49,7 @@ run-geth-bsp:
   --port 0 \
   --log.debug \
   --syncmode full \
-  --datadir /Users/pranay/Library/Ethereum/workshop/ \
+  --datadir /Users/$(U)/Library/Ethereum/workshop/ \
   --replication.targets "redis://localhost:6379/?topic=replication" \
   --replica.result \
   --replica.specimen
