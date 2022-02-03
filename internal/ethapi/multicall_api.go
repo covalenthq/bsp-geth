@@ -48,7 +48,7 @@ func (s *PublicBlockChainAPI) Multicall(ctx context.Context, commonCallArgs Tran
 
 		for _, payload := range payloads {
 			// assign the correct values to args
-			callArgsBuf.Input = (*hexutil.Bytes)(&payload)
+			callArgsBuf.Input = &payload
 
 			// get a new Message to be used once
 			msg, err := callArgsBuf.ToMessage(globalGasCap, header.BaseFee)
@@ -78,7 +78,7 @@ func (s *PublicBlockChainAPI) Multicall(ctx context.Context, commonCallArgs Tran
 
 			mcExecResult := &MulticallExecutionResult{
 				UsedGas: execResult.UsedGas,
-				Err: effectiveErrDesc,
+				Err:     effectiveErrDesc,
 			}
 
 			if len(execResult.ReturnData) > 0 {
