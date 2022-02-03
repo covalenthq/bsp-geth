@@ -38,6 +38,7 @@
   * [Resources](#bsp_resources)
 * [Raison d'être](#bsp_why)
 * [Architecture](#bsp_arch)
+* [Docker](#docker)
 * [Build & Run](#build_run)
   * [Flag Definitions](#flag_definitions)
 * [Contributing](./docs/CONTRIBUTING.md)
@@ -115,6 +116,37 @@ In sum, it is the responsibility of the BSPs to consume blocks from external blo
 How does this create and accrue value for the Covalent Network? As Block Specimen Producers publish more data to Covalent Network, developers will be attracted. With a growing developer base on the Covalent Network, there will be a greater appetite for blockchain data. And hence, the cycle begins again, with Block Specimens expected to meet this demand for data.
 Of course, operators who successfully perform this role will be compensated in CQT.
 
+## <span id="docker">Docker Run</span>
+
+Please install [docker and docker-compose](https://docs.docker.com/compose/install/).
+
+Employ `docker-compose` to get all the necessary services along with BSP Geth to also get running along side it. With `docker-compose` BSP Geth creates block-specimens that are extracted Live for Ethereum Mainnet, pushes them to the Redis stream queue, the BSP Agent service then reads the RLP block-specimens and processes the messages from the redis stream and stores/uploads them according to the configuration given to it. The BSP Agent makes statements about the block-specimens by writing to a proxy proof-chain smart contract that is deployed on a test ganache blockchain i.e the proving aspects happen locally and not on a public blockchain. The Specimens stored locally or uploaded to google cloud storage however retain full validity (if the BSP Geth / Agent source code is not altered.) Add an .env file (if needed) to accomodate the env vars.
+
+In the future, for the BSP Agent the flags `--eth-client` pointing to a Mainnet ethereum client & `--proof-chain-address` pointing to the correct version of the deployed proofing contract along with the an `.env` file with `ETH_PRIVATE_KEY` var will have to be updated to run entirely for CQT Mainnet.
+These changes can also be directly adapted into the docker-compose.yml file in this directory.
+
+The list of all services are -
+
+1. redis-srv (Open source (BSD licensed), in-memory data structure store)
+1. redis-commander-web (Redis web management tool written in node.js)
+1. ganache-cli (Ethereum blockchain & client)
+1. proof-chain (Validation (proofing) smart-contracts)
+1. bsp-agent (Specimen decoded, packer, prover and storer)
+
+```bash
+    git clone git@github.com:covalenthq/go-ethereum.git
+    cd go-ethereum
+    docker-compose -f "docker-compose.yml" up --force-recreate
+```
+
+The docker image for this service can be found [here](https://github.com/covalenthq/go-ethereum/pkgs/container/go-ethereum-bsp)
+
+Run only go-ethereum-bsp with the following, though this will not work if the other services in the docker-compose.yml file aren't also initialized.
+
+```bash
+    docker pull ghcr.io/covalenthq/go-ethereum-bsp:latest
+    docker run ghcr.io/covalenthq/go-ethereum-bsp:latest
+```
 
 ## <span id="build_run">Build & Run</span>
 
@@ -205,6 +237,7 @@ If it doesn’t - the BSP - producer isn't producing messages! In this case plea
 `--replica.specimen` -  this flag lets the BSP know if all fields related to the block-specimen specification need to be exported (if only this flag is selected the exported object is a block-specimen)
 
 If both `--replica-result` & `--replica-specimen` are selected then a `block-replica` is exported containing all the fields for exporting any block fully alongwith its stored state.
+
 
 ## <span id="geth">Go Ethereum</span>
 
