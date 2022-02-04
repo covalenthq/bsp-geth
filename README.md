@@ -38,7 +38,7 @@
   * [Resources](#bsp_resources)
 * [Raison d'être](#bsp_why)
 * [Architecture](#bsp_arch)
-* [Docker](#docker)
+* [Docker Run](#docker)
 * [Build & Run](#build_run)
   * [Flag Definitions](#flag_definitions)
 * [Contributing](./docs/CONTRIBUTING.md)

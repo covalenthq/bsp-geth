@@ -111,15 +111,7 @@ services:
         sleep 1;
         done;
         echo proof-chain contracts deployed!;
-        ./main --redis-url=redis://username:@redis:6379/0?topic=replication#replicate  \
-        --avro-codec-path=./codec/block-ethereum.avsc \
-        --binary-file-path=./bin/block-ethereum/ \
-        --gcp-svc-account=/Users/user/.config/gcloud/bsp.json \
-        --replica-bucket=covalenthq-geth-block-specimen \
-        --segment-length=10 \
-        --eth-client=http://ganache-cli:8545  \
-        --proof-chain-address=0xEa2ff902dbeEECcc828757B881b343F9316752e5 \
-        --consumer-timeout=600;
+        ./main --redis-url=redis://username:@redis:6379/0?topic=replication#replicate  --avro-codec-path=./codec/block-ethereum.avsc --binary-file-path=./bin/block-ethereum/ --gcp-svc-account=/Users/user/.config/gcloud/bsp.json --replica-bucket=covalenthq-geth-block-specimen --segment-length=10 --eth-client=http://ganache-cli:8545  --proof-chain-address=0xEa2ff902dbeEECcc828757B881b343F9316752e5 --consumer-timeout=6000;
         exit 0;"
     environment:
       - ETH_PRIVATE_KEY=0x22aabb811efca4e6f4748bd18a46b502fa85549df9fa07da649c0a148d7d5530
