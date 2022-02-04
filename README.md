@@ -136,7 +136,47 @@ The list of all services are -
 ```bash
     git clone git@github.com:covalenthq/go-ethereum.git
     cd go-ethereum
-    docker-compose -f "docker-compose.yml" up --force-recreate
+    docker-compose -f "docker-compose.yml" up
+```
+
+If all the services are up and running well, expect to see the logs similar to the following, in approx ~ 10 mins, as the node begins to sync and export Block Specimens.
+
+```bash
+bsp-geth           | INFO [02-04|18:59:33.731|core/block_replica.go:36]             Creating block replication event         block number=139 hash=0x41d2931a4495deabbf9f58181a48d29c89036c8fb8b9ecedb5f23805cc6f5e34
+bsp-geth           | INFO [02-04|18:59:33.745|core/block_replica.go:36]             Creating block replication event         block number=140 hash=0xe2c1e8200ef2e9fba09979f0b504dc52c068719623c7064904c7bd3e9365acc1
+ganache-cli        |
+ganache-cli        |   Transaction: 0x398c2d9c820a6bbdfd7de696b7e049b25114285f00a4c12f49ef492bf2522858
+ganache-cli        |   Gas usage: 48457
+ganache-cli        |   Block Number: 9
+ganache-cli        |   Block Time: Fri Feb 04 2022 18:59:33 GMT+0000 (Coordinated Universal Time)
+ganache-cli        |
+ganache-cli        | eth_getTransactionReceipt
+bsp-geth           | INFO [02-04|18:59:33.819|core/block_replica.go:36]             Creating block replication event         block number=141 hash=0xeafbe76fdcadc1b69ba248589eb2a674b60b00c84374c149c9deaf5596183932
+bsp-agent          | time="2022-02-04T18:59:33Z" level=info msg="Proof-chain tx hash: 0x398c2d9c820a6bbdfd7de696b7e049b25114285f00a4c12f49ef492bf2522858 for block-replica segment: 1-1-10-replica-segment" function=EncodeProveAndUploadReplicaSegment line=63
+bsp-agent          | time="2022-02-04T18:59:33Z" level=info msg="File written successfully to: ./bin/block-ethereum/1-1-10-replica-segment-0x398c2d9c820a6bbdfd7de696b7e049b25114285f00a4c12f49ef492bf2522858" function=writeToBinFile line=88
+bsp-geth           | INFO [02-04|18:59:33.855|core/block_replica.go:36]             Creating block replication event         block number=142 hash=0x8ff76dc49f9a1492813a281a474f102890cdd5a42399241d5fa403f201a4d7cf
+bsp-agent          |
+bsp-agent          | ---> Processing 1-11-20-replica-segment <---
+bsp-agent          | time="2022-02-04T18:59:33Z" level=info msg="Submitting block-replica segment proof for: 1-11-20-replica-seg
+```
+
+with occasional responses from `bsp-agent` service such as -
+
+```bash
+bsp-agent          | ---> Processing 1-61-70-replica-segment <---
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Submitting block-replica segment proof for: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=57
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Proof-chain tx hash: 0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711 for block-replica segment: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=63
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="File written successfully to: ./bin/block-ethereum/1-61-70-replica-segment-0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711" function=writeToBinFile line=88
+```
+
+To inspect the actual block specimen binary files produced, exec into the `bsp-agent` container and run the `bsp-extractor` as shown below -
+
+![diagram](./docs/extract.png)
+
+```bash
+docker ps
+docker exec -it <mq-store-agent_container_id> /bin/bash
+./bsp-extractor --binary-file-path "./bin/block-ethereum/" --codec-path "./codec/block-ethereum.avsc" --indent-json 0
 ```
 
 The docker image for this service can be found [here](https://github.com/covalenthq/go-ethereum/pkgs/container/go-ethereum-bsp)
@@ -196,12 +236,23 @@ Prior to executing, please replace `<user>` with correct local username within t
   --replica.specimen
 ```
 
-Expect to see the following logs in approx ~ 10 mins as the node begins to sync and export Block Specimens
+Expect to see the following logs from `bsp-geth` service in approx ~ 10 mins as the node begins to sync and export Block Specimens
 
 ```log
-blocks=1 txs=0 mgas=0.000 elapsed=12.947ms    mgasps=0.000 number=3 hash=3d6122..8cf741 age=6y4mo1w  dirty=8.92KiB
-INFO [11-18|17:24:35.977|core/block_replica.go:112]        Exporting full block-replica
-INFO [11-18|17:24:35.977|core/block_replica.go:36]         Creating block replication event         block number=41042 hash=0x0b8706384cf93820c7f8fe72b5463e756d917c94b0df98f850820593b9422b09
+bsp-geth             | INFO [02-04|17:11:50.991|core/block_replica.go:36]             Creating block replication event         block number=1,103,839 hash=0x2118a7c7a71e65227f8c6dd2b36ef89bc6d71a3b2ef249f026f43f99b0ab4912
+bsp-geth             | INFO [02-04|17:11:50.993|core/block_replica.go:36]             Creating block replication event         block number=1,103,840 hash=0x77a8439b4f6423cc4a9d4af950c8d024146900c7ce3edbaf154a514e5522c54a
+bsp-geth             | INFO [02-04|17:11:50.999|core/block_replica.go:36]             Creating block replication event         block number=1,103,841 hash=0x90c7ace11146f97adb9e50e3e5cbcb151323f5d038a3d25362906bd91f1c5aba
+```
+
+with occasional responses from `bsp-agent` service such as -
+
+```log
+bsp-agent          | ---> Processing 1-61-70-replica-segment <---
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Submitting block-replica segment proof for: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=57
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Proof-chain tx hash: 0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711 for block-replica segment: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=63
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="File written successfully to: ./bin/block-ethereum/1-61-70-replica-segment-0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711" function=writeToBinFile line=88
+bsp-agent          |
+bsp-agent          | ---> Processing 1-71-80-replica-segment <---
 ```
 
 The last two lines above show that new block replicas containing the block specimens are being produced and streamed to the redis topic “replication”.
