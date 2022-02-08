@@ -92,8 +92,6 @@ services:
   agent:
     image: "ghcr.io/covalenthq/mq-store-agent:latest"
     container_name: bsp-agent
-    links:
-      - "cqt-virtnet:proof-chain"
     restart:  on-failure
     depends_on:
       cqt-virtnet:
