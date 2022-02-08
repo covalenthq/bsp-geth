@@ -50,4 +50,5 @@ profile.cov
 
 data/
 ganache_data/
+.env
 
