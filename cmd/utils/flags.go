@@ -1752,7 +1752,7 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	setMiner(ctx, &cfg.Miner)
 	setRequiredBlocks(ctx, cfg)
 	setLes(ctx, cfg)
-	if ctx.GlobalIsSet(BlockReplicationTargetsFlag.Name) {
+	if ctx.IsSet(BlockReplicationTargetsFlag.Name) {
 		setBlockReplicationTargets(ctx, cfg)
 	}
 

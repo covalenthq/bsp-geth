@@ -6,9 +6,8 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v0.3.0
 	github.com/VictoriaMetrics/fastcache v1.6.0
 	github.com/aws/aws-sdk-go-v2 v1.13.0
-	github.com/aws/aws-sdk-go-v2/config v1.1.1
-	github.com/aws/aws-sdk-go-v2/credentials v1.1.1
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.5 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.13.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.17.0
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0
 	github.com/cespare/cp v1.1.1
@@ -80,12 +79,13 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v0.8.3 // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20210722123801-4591d76fce28 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.2 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.2.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.0.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.1.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.1.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.9.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.14.0 // indirect
 	github.com/aws/smithy-go v1.10.0 // indirect
 	github.com/benbjohnson/immutable v0.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
