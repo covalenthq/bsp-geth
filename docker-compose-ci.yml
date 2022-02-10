@@ -59,7 +59,7 @@ services:
       - 8008
     entrypoint: >
      /bin/bash -l -c "
-      truffle migrate --network development;
+      truffle migrate --network docker;
       nc -v agent 8008;
       sleep 100000;"
     depends_on:
