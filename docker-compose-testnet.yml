@@ -52,9 +52,11 @@ services:
     depends_on:
       geth:
         condition: service_started
+    volumes:
+      - /Users/pranay/.config/gcloud:/app/gcloud
     entrypoint: >
       /bin/bash -l -c "
-        ./bsp-agent --redis-url=redis://username:@redis:6379/0?topic=replication#replicate  --avro-codec-path=./codec/block-ethereum.avsc --binary-file-path=./bin/block-ethereum/ --replica-bucket=covalenthq-geth-block-specimen --segment-length=100 --proof-chain-address=0x658839e8a2d85b63757f6ca4FA044116048Bd093 --consumer-timeout=6000;
+        ./bsp-agent --redis-url=redis://username:@redis:6379/0?topic=replication#replicate  --avro-codec-path=./codec/block-ethereum.avsc --binary-file-path=./bin/block-ethereum/ --replica-bucket=covalenthq-geth-block-specimen --segment-length=100 --proof-chain-address=0x67688076Da389cd1EcD90C4573d1D0e6BA04AC6a --consumer-timeout=6000 --gcp-svc-account=./gcloud/bsp-2.json;
         exit 0;"
     environment:
       - ETH_PRIVATE_KEY=${PRIVATE_KEY}
