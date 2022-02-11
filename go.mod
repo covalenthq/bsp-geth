@@ -3,8 +3,7 @@ module github.com/ethereum/go-ethereum
 go 1.15
 
 require (
-	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
-	github.com/Azure/azure-storage-blob-go v0.7.0
+	github.com/Azure/azure-storage-blob-go v0.14.0
 	github.com/VictoriaMetrics/fastcache v1.6.0
 	github.com/aws/aws-sdk-go-v2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/config v1.13.1
