@@ -5,12 +5,10 @@ go 1.15
 require (
 	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
 	github.com/Azure/azure-storage-blob-go v0.7.0
-	github.com/Azure/go-autorest/autorest/adal v0.8.0 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0
 	github.com/aws/aws-sdk-go-v2 v1.13.0
-	github.com/aws/aws-sdk-go-v2/config v1.1.1
-	github.com/aws/aws-sdk-go-v2/credentials v1.1.1
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.5 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.13.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.17.0
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/cespare/cp v1.1.1
@@ -23,16 +21,16 @@ require (
 	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf
 	github.com/dop251/goja v0.0.0-20200721192441-a695b0cdd498
 	github.com/edsrzf/mmap-go v1.1.0
-	github.com/fatih/color v1.7.0
+	github.com/fatih/color v1.9.0
 	github.com/fjl/memsize v0.0.0-20190710130421-bcb5799ab5e5
 	github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff
 	github.com/go-redis/redis/v7 v7.4.1
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
 	github.com/go-stack/stack v1.8.0
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.2
 	github.com/golang/snappy v0.0.4
 	github.com/google/gofuzz v1.1.1-0.20200604201612-c04b05f3adfa
-	github.com/google/uuid v1.1.5
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/graph-gophers/graphql-go v0.0.0-20201113091052-beb923fada29
 	github.com/hashicorp/go-bexpr v0.1.10
@@ -40,12 +38,12 @@ require (
 	github.com/holiman/bloomfilter/v2 v2.0.3
 	github.com/holiman/uint256 v1.2.0
 	github.com/huin/goupnp v1.0.2
-	github.com/influxdata/influxdb v1.8.3
+	github.com/influxdata/influxdb v1.9.6
 	github.com/influxdata/influxdb-client-go/v2 v2.4.0
 	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458
 	github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e
-	github.com/julienschmidt/httprouter v1.2.0
+	github.com/julienschmidt/httprouter v1.3.0
 	github.com/karalabe/usb v0.0.0-20211005121534-4c5740d64559
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.8
