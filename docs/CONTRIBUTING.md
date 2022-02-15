@@ -15,7 +15,7 @@
 ## <span id="bugs">Reporting Bugs</span>
 
 Please file bugs in the [GitHub Issue
-Tracker](https://github.com/covalenthq/go-ethereum). Include at
+Tracker](https://github.com/covalenthq/bsp-geth). Include at
 least the following:
 
  - What happened
@@ -33,8 +33,8 @@ too much information will never be a cause for concern.
 
 Contributing to this repo can mean many things such as participating in discussion or proposing code changes. To ensure a smooth workflow for all contributors, the following general procedure for contributing has been established:
 
-1. Either [open](https://github.com/covalenthq/go-ethereum/issues/new/choose)
-   or [find](https://github.com/covalenthq/go-ethereum/issues) an issue you have identified and would like to contribute to
+1. Either [open](https://github.com/covalenthq/bsp-geth/issues/new/choose)
+   or [find](https://github.com/covalenthq/bsp-geth/issues) an issue you have identified and would like to contribute to
    resolving.
 
 2. Participate in thoughtful discussion on that issue.
@@ -61,7 +61,7 @@ PR, but be aware that for more complex problems/features, if a PR is opened befo
 taken place in a github issue, that PR runs a high likelihood of being rejected.
 
 Looking for a good place to start contributing? How about checking out
-some [good first issues](https://github.com/covalenthq/go-ethereum/issues).
+some [good first issues](https://github.com/covalenthq/bsp-geth/issues).
 
 ### <span id="dev_procedure">Development Procedure</span>
 
@@ -69,7 +69,7 @@ some [good first issues](https://github.com/covalenthq/go-ethereum/issues).
 2. `main` must never
    fail `make lint, make geth, make all `
 3. No `--force` onto `main` (except when reverting a broken commit, which should seldom happen).
-4. Create your feature branch from `main` either on `github.com/covalenthq/go-ethereum`, or your fork (
+4. Create your feature branch from `main` either on `github.com/covalenthq/bsp-geth`, or your fork (
    using `git remote add origin`).
 5. Before submitting a pull request, begin `git rebase` on top of `main`.
 
@@ -86,7 +86,7 @@ on `go mod tidy -v`.
 
 ### <span id="testing">Testing</span>
 
-Covalent uses [GitHub Actions](https://github.com/features/actions) for automated [integration testing](https://github.com/covalenthq/go-ethereum/actions).
+Covalent uses [GitHub Actions](https://github.com/features/actions) for automated [integration testing](https://github.com/covalenthq/bsp-geth/actions).
 
 ### <span id="braching_model_and_release">Branching Model and Release</span>
 

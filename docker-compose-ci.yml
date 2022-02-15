@@ -90,7 +90,7 @@ services:
       - 30303/udp
 
   agent:
-    image: "ghcr.io/covalenthq/mq-store-agent:latest"
+    image: "ghcr.io/covalenthq/bsp-agent:latest"
     container_name: bsp-agent
     restart:  on-failure
     depends_on:
