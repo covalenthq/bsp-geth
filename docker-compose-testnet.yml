@@ -32,7 +32,7 @@ services:
       - "8081:8081"
 
   geth:
-    image: "ghcr.io/covalenthq/go-ethereum-bsp:latest"
+    image: "ghcr.io/covalenthq/bsp-geth:latest"
     container_name: bsp-geth
     restart:  always
     depends_on:
@@ -51,7 +51,7 @@ services:
       - ./data/.ethereum/:/data/.ethereum/
 
   agent:
-    image: "ghcr.io/covalenthq/mq-store-agent:latest"
+    image: "ghcr.io/covalenthq/bsp-agent:latest"
     container_name: bsp-agent
     restart:  always
     depends_on:

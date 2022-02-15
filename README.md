@@ -1,32 +1,35 @@
 ![banner](./docs/covalent.jpg)
 
 <div align="center">
-  <a href="https://github.com/covalenthq/mq-store-agent/releases/latest">
+  <a href="https://github.com/covalenthq/bsp-geth/releases/latest">
     <img alt="Version" src="https://img.shields.io/badge/tag-v1.0.0-yellowgreen" />
   </a>
-  <a href="https://github.com/covalenthq/go-ethereum/blob/main/LICENSE">
+  <a href="https://github.com/covalenthq/bsp-geth/blob/main/LICENSE">
     <img alt="License: " src="https://img.shields.io/badge/license-MIT-green" />
   </a>
-  <a href="https://goreportcard.com/report/github.com/covalenthq/go-ethereum">
-    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/"/>
+  <a href="https://goreportcard.com/report/github.com/covalenthq/bsp-geth">
+    <img alt="Go report card" src="https://goreportcard.com/badge/github.com/covalenthq/bsp-geth"/>
   </a>
   <a href="http://covalenthq.com/discord">
     <img alt="Discord" src="https://img.shields.io/badge/discord-join%20chat-blue.svg" />
   </a>
   <!-- <a href="https://bestpractices.coreinfrastructure.org/projects/0000">
-    <img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/covalenthq/go-ethereum">
+    <img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/covalenthq/bsp-geth">
   </a> -->
 </div>
 <div align="center">
   <a href="http://covalenthq.com/discord">
     <img alt="Discord" src="https://img.shields.io/discord/715804406842392586.svg" />
   </a>
-  <!-- <a href="https://github.com/covalenthq/go-ethereum/actions/workflows/golangci-lint.yml?query=branch%3Amain+workflow%3Agolangci-lint">
-    <img alt="Lint Status" src="https://github.com/covalenthq/go-ethereum/actions/workflows/golangci-lint.yml/badge.svg?branch=main" />
+  <a href="https://github.com/covalenthq/bsp-geth/actions/workflows/golangci-lint.yml?query=branch%3Acovalent+workflow%3Agolangci-lint">
+    <img alt="Lint Status" src="https://github.com/covalenthq/bsp-geth/actions/workflows/golangci-lint.yml/badge.svg?branch=covalent" />
   </a>
-  <a href="https://github.com/covalenthq/go-ethereum/actions/workflows/docker-image.yml?query=branch%3Amain+workflow%3Adocker-image-ci">
-    <img alt="CI Status" src="https://github.com/covalenthq/go-ethereum/actions/workflows/docker-image.yml/badge.svg?branch=main" />
-  </a> -->
+  <a href="https://github.com/covalenthq/bsp-geth/actions/workflows/docker-image.yml?query=branch%3Acovalent+workflow%3Adocker-image-ci">
+    <img alt="CI Status" src="https://github.com/covalenthq/bsp-geth/actions/workflows/docker-image.yml/badge.svg?branch=covalent" />
+  </a>
+  <a href="https://github.com/covalenthq/bsp-geth/actions/workflows/docker-image.yml?query=branch%3Acovalent+workflow%3Abuild-test">
+    <img alt="CI Status" src="https://github.com/covalenthq/bsp-geth/actions/workflows/build-test.yml/badge.svg?branch=covalent" />
+  </a>
   <a href="https://twitter.com/@Covalent_HQ">
     <img alt="Twitter Follow Covalent" src="https://img.shields.io/twitter/follow/Covalent_HQ"/>
   </a>
@@ -64,13 +67,13 @@ As a result, anyone can run full tracing on the block specimen and accurately re
 
 Production of Block Specimens forms the core of the network’s data objects specification. These objects are created with the aid of three main pieces of open-source software provided by Covalent for the network’s decentralized stack.
 
-1. [Block Specimen Producer (BSP Geth)](https://github.com/covalenthq/go-ethereum) - Operator run & deployed
+1. [Block Specimen Producer (BSP Geth)](https://github.com/covalenthq/bsp-geth) - Operator run & deployed
 
-1. [BSP Agent](https://github.com/covalenthq/mq-store-agent) - Operator run & deployed
+1. [BSP Agent](https://github.com/covalenthq/bsp-agent) - Operator run & deployed
 
 1. [BSP Proof-chain](https://github.com/covalenthq/cqt-virtnet) - Covalent operated & pre-deployed
 
-Please refer to these [instructions](https://docs.google.com/document/d/1BMC9-VXZfpB6mGczSu8ylUXJZ_CIx4ephepDtlruv_Q/edit?usp=sharing) for running the BSP with the mq-store-agent (BSP Agent).
+Please refer to these [instructions](https://docs.google.com/document/d/1N_HxUi6ZEkub9EHANe49vkL9iQztVA_ACyfHcOZV5y0/edit?usp=sharing) for running the BSP with the bsp-agent (BSP Agent).
 
 Please refer to this [whitepaper](https://www.covalenthq.com/static/documents/Block%20Specimen%20Whitepaper%20V1.1.pdf) to understand more about its function.
 
@@ -134,7 +137,7 @@ The list of all services are -
 1. bsp-agent (Specimen decoded, packer, prover and storer)
 
 ```bash
-    git clone git@github.com:covalenthq/go-ethereum.git
+    git clone git@github.com:covalenthq/bsp-geth.git
     cd go-ethereum
     docker-compose -f "docker-compose.yml" up
 ```
@@ -175,25 +178,25 @@ To inspect the actual block specimen binary files produced, exec into the `bsp-a
 
 ```bash
 docker ps
-docker exec -it <mq-store-agent_container_id> /bin/bash
+docker exec -it <bsp-agent_container_id> /bin/bash
 ./bsp-extractor --binary-file-path "./bin/block-ethereum/" --codec-path "./codec/block-ethereum.avsc" --indent-json 0
 ```
 
-The docker image for this service can be found [here](https://github.com/covalenthq/go-ethereum/pkgs/container/go-ethereum-bsp)
+The docker image for this service can be found [here](https://github.com/covalenthq/bsp-geth/pkgs/container/go-ethereum-bsp)
 
 Run only go-ethereum-bsp with the following, though this will not work if the other services in the docker-compose.yml file aren't also initialized.
 
 ```bash
-    docker pull ghcr.io/covalenthq/go-ethereum-bsp:latest
-    docker run ghcr.io/covalenthq/go-ethereum-bsp:latest
+    docker pull ghcr.io/covalenthq/bsp-geth-bsp:latest
+    docker run ghcr.io/covalenthq/bsp-geth-bsp:latest
 ```
 
 ## <span id="build_run">Build & Run</span>
 
-Clone the `covalenthq/go-ethereum` repo and checkout the branch that contains the block specimen patch aka `covalent`
+Clone the `covalenthq/bsp-geth` repo and checkout the branch that contains the block specimen patch aka `covalent`
 
 ```bash
-git clone git@github.com:covalenthq/go-ethereum.git
+git clone git@github.com:covalenthq/bsp-geth.git
 cd go-ethereum
 git checkout covalent
 ```
