@@ -16,7 +16,6 @@ require (
 	github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea
-	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/dlclark/regexp2 v1.2.0 // indirect
 	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf
 	github.com/dop251/goja v0.0.0-20200721192441-a695b0cdd498
@@ -39,7 +38,7 @@ require (
 	github.com/holiman/uint256 v1.2.0
 	github.com/huin/goupnp v1.0.2
 	github.com/influxdata/influxdb v1.9.6
-	github.com/influxdata/influxdb-client-go/v2 v2.4.0
+	github.com/influxdata/influxdb-client-go/v2 v2.8.0
 	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458
 	github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e
