@@ -13,9 +13,12 @@
   <a href="http://covalenthq.com/discord">
     <img alt="Discord" src="https://img.shields.io/badge/discord-join%20chat-blue.svg" />
   </a>
-  <!-- <a href="https://bestpractices.coreinfrastructure.org/projects/0000">
+  <a href="https://bestpractices.coreinfrastructure.org/projects/0000">
     <img alt="Lines of code" src="https://img.shields.io/tokei/lines/github/covalenthq/bsp-geth">
-  </a> -->
+  </a>
+   <a href="https://bestpractices.coreinfrastructure.org/projects/5644">
+     <img src="https://bestpractices.coreinfrastructure.org/projects/5644/badge">
+  </a>
 </div>
 <div align="center">
   <a href="http://covalenthq.com/discord">
