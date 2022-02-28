@@ -137,15 +137,15 @@ The list of all services are -
 1. redis-commander-web (Redis web management tool written in node.js)
 1. ganache-cli (Ethereum blockchain & client)
 1. proof-chain (Validation (proofing) smart-contracts)
-1. bsp-agent (Specimen decoded, packer, prover and storer)
+1. bsp-agent (Block specimen decoder, packer, prover and storer)
 
 ```bash
-    git clone git@github.com:covalenthq/bsp-geth.git
-    cd go-ethereum
-    docker-compose -f "docker-compose.yml" up
+git clone git@github.com:covalenthq/bsp-geth.git
+cd bsp-geth
+docker-compose -f "docker-compose-testnet.yml" up
 ```
 
-If all the services are up and running well, expect to see the logs similar to the following, in approx ~ 10 mins, as the node begins to sync and export Block Specimens.
+If all the services are up and running well, expect to see the logs similar to the following, in approx ~ 10 mins, as the node begins to sync and export Block Specimens. Please note we don't advice running bsp-geth and bsp-agent in production with docker (this is only for demo purposes).
 
 ```bash
 bsp-geth           | INFO [02-04|18:59:33.731|core/block_replica.go:36]             Creating block replication event         block number=139 hash=0x41d2931a4495deabbf9f58181a48d29c89036c8fb8b9ecedb5f23805cc6f5e34
@@ -190,21 +190,21 @@ The docker image for this service can be found [here](https://github.com/covalen
 Run only go-ethereum-bsp with the following, though this will not work if the other services in the docker-compose.yml file aren't also initialized.
 
 ```bash
-    docker pull ghcr.io/covalenthq/bsp-geth-bsp:latest
-    docker run ghcr.io/covalenthq/bsp-geth-bsp:latest
+docker pull ghcr.io/covalenthq/bsp-geth-bsp:latest
+docker run ghcr.io/covalenthq/bsp-geth-bsp:latest
 ```
 
 ## <span id="build_run">Build & Run</span>
 
 Clone the `covalenthq/bsp-geth` repo and checkout the branch that contains the block specimen patch aka `covalent`
 
-```bash
+```sh
 git clone git@github.com:covalenthq/bsp-geth.git
-cd go-ethereum
+cd bsp-geth
 git checkout covalent
 ```
 
-Build `geth` from source (install `Go` if you don’t have it) and other geth developer tools from root (if you need all the geth related development tools do a `make all`)
+Build `geth` from source (install [`Go`](https://go.dev/doc/install) if you don’t have it) and other geth developer tools from root. Make sure you also have [`make`](https://www.gnu.org/software/make/) that is used too build and install bsp-geth. If you need all the go-ethereum development related tools do a `make all`.
 
 ```bash
 make geth
@@ -213,15 +213,18 @@ make geth
 Start redis (our streaming service) with the following.
 
 ```bash
-brew services start redis          
-Successfully started `redis` (label: homebrew.mxcl.redis)
+$ redis-server
+[28550] 01 Aug 19:29:28 # Warning: no config file specified, using the default config. In order to specify a config file use 'redis-server /path/to/redis.conf'
+[28550] 01 Aug 19:29:28 * Server started, Redis version 2.2.12
+[28550] 01 Aug 19:29:28 * The server is now ready to accept connections on port 6379
 ```
 
 Start redis-cli in a separate terminal so you can see the encoded bsps as they are fed into redis streams.
 
 ```bash
-redis-cli                          
-127.0.0.1:6379>
+$ redis-cli
+127.0.0.1:6379> ping
+PONG
 ```
 
 We are now ready to start accepting stream message into redis locally
@@ -233,10 +236,9 @@ Prior to executing, please replace `<user>` with correct local username within t
 ```bash
 ./build/bin/geth \
   --mainnet \
-  --port 0 \
   --log.debug \
   --syncmode full \
-  --datadir /Users/<user>/Library/Ethereum/bsp/ \
+  --datadir ~/.ethereum/bsp \
   --replication.targets "redis://localhost:6379/?topic=replication" \
   --replica.result \
   --replica.specimen
@@ -244,21 +246,10 @@ Prior to executing, please replace `<user>` with correct local username within t
 
 Expect to see the following logs from `bsp-geth` service in approx ~ 10 mins as the node begins to sync and export Block Specimens
 
-```log
+```bash
 bsp-geth             | INFO [02-04|17:11:50.991|core/block_replica.go:36]             Creating block replication event         block number=1,103,839 hash=0x2118a7c7a71e65227f8c6dd2b36ef89bc6d71a3b2ef249f026f43f99b0ab4912
 bsp-geth             | INFO [02-04|17:11:50.993|core/block_replica.go:36]             Creating block replication event         block number=1,103,840 hash=0x77a8439b4f6423cc4a9d4af950c8d024146900c7ce3edbaf154a514e5522c54a
 bsp-geth             | INFO [02-04|17:11:50.999|core/block_replica.go:36]             Creating block replication event         block number=1,103,841 hash=0x90c7ace11146f97adb9e50e3e5cbcb151323f5d038a3d25362906bd91f1c5aba
-```
-
-with occasional responses from `bsp-agent` service such as -
-
-```log
-bsp-agent          | ---> Processing 1-61-70-replica-segment <---
-bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Submitting block-replica segment proof for: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=57
-bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Proof-chain tx hash: 0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711 for block-replica segment: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=63
-bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="File written successfully to: ./bin/block-ethereum/1-61-70-replica-segment-0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711" function=writeToBinFile line=88
-bsp-agent          |
-bsp-agent          | ---> Processing 1-71-80-replica-segment <---
 ```
 
 The last two lines above show that new block replicas containing the block specimens are being produced and streamed to the redis topic “replication”.
@@ -268,10 +259,24 @@ Please note it may take anywhere from 2-10 mins to reach this point depending on
 After this you can check that redis is stacking up the bsp messages through the redis-cli with the command below (this should give you a bunch of messages from the stream)
 
 ```bash
+$ redis-cli
 127.0.0.1:6379>  XREAD COUNT 4 STREAMS replication 0-0
 ```
 
 If it doesn’t - the BSP - producer isn't producing messages! In this case please look at the logs above and see if you have any WARN / DEBUG logs that can be responsible for the inoperation.
+
+Further, also have [`bsp-agent`](https://github.com/covalenthq/bsp-agent) running alongside consuming messages from redis. You should see the occasional responses from `bsp-agent` service such as -
+
+```bash
+bsp-agent          | ---> Processing 1-61-70-replica-segment <---
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Submitting block-replica segment proof for: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=57
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Proof-chain tx hash: 0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711 for block-replica segment: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=63
+bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="File written successfully to: ./bin/block-ethereum/1-61-70-replica-segment-0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711" function=writeToBinFile line=88
+bsp-agent          |
+bsp-agent          | ---> Processing 1-71-80-replica-segment <---
+```
+
+If you see all of the above you're successfully running the full BSP pipeline.
 
 ### <span id="flag_definitions">Flag definitions</span>
 
