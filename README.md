@@ -265,6 +265,14 @@ $ redis-cli
 
 If it doesn’t - the BSP - producer isn't producing messages! In this case please look at the logs above and see if you have any WARN / DEBUG logs that can be responsible for the inoperation.
 
+For quick development iteration and faster network sync - enable a new node key to quickly re-sync with the ethereum network for development and testing by going to the root of go-ethereum and running the bootnode helper.
+
+NOTE: To use the bootnode binary execute `make all` in place of `make geth`, this creates all the additional helper binaries that `bsp-geth` ships with.
+
+```bash
+./build/bin/bootnode -genkey ~/.ethereum/bsp/geth/nodekey
+```
+
 Further, also have [`bsp-agent`](https://github.com/covalenthq/bsp-agent) running alongside consuming messages from redis. You should see the occasional responses from `bsp-agent` service such as -
 
 ```bash
