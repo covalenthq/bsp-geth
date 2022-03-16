@@ -32,6 +32,7 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var Memsize memsizeui.Handler
@@ -134,15 +135,26 @@ func init() {
 func Setup(ctx *cli.Context) error {
 	var ostream log.Handler
 	output := io.Writer(os.Stderr)
+
+	var fmtr log.Format
 	if ctx.Bool(logjsonFlag.Name) {
-		ostream = log.StreamHandler(output, log.JSONFormat())
+		fmtr = log.JSONFormat()
 	} else {
 		usecolor := (isatty.IsTerminal(os.Stderr.Fd()) || isatty.IsCygwinTerminal(os.Stderr.Fd())) && os.Getenv("TERM") != "dumb"
 		if usecolor {
 			output = colorable.NewColorableStderr()
 		}
-		ostream = log.StreamHandler(output, log.TerminalFormat(usecolor))
+		fmtr = log.TerminalFormat(usecolor)
 	}
+
+	outWriter := log.StreamHandler(&lumberjack.Logger{
+		Filename:   "./logs/log.log",
+		MaxSize:    100,
+		MaxBackups: 7,
+		MaxAge:     10,
+	}, fmtr)
+
+	ostream = log.MultiHandler(outWriter, log.StreamHandler(output, fmtr))
 	glogger.SetHandler(ostream)
 
 	// logging
