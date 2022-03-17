@@ -26,6 +26,7 @@ import (
 	"path"
 	"runtime"
 
+	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/metrics/exp"
@@ -63,10 +64,10 @@ var (
 		Name:  "log.debug",
 		Usage: "Prepends log messages with call-site location (file and line number)",
 	}
-	logLocationFlag = DirectoryFlag{
+	logLocationFlag = flags.DirectoryFlag{
 		Name:  "log.folder",
 		Usage: "Location where the log files should be placed",
-		Value: DirectoryString("./logs/"),
+		Value: flags.DirectoryString("./logs/"),
 	}
 	pprofFlag = cli.BoolFlag{
 		Name:  "pprof",

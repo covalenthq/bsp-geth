@@ -53,7 +53,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/ethstats"
 	"github.com/ethereum/go-ethereum/graphql"
-	"github.com/ethereum/go-ethereum/internal/debug"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/les"
@@ -110,20 +109,20 @@ func printHelp(out io.Writer, templ string, data interface{}) {
 
 var (
 	// General settings
-	DataDirFlag = debug.DirectoryFlag{
+	DataDirFlag = flags.DirectoryFlag{
 		Name:  "datadir",
 		Usage: "Data directory for the databases and keystore",
-		Value: debug.DirectoryString(node.DefaultDataDir()),
+		Value: flags.DirectoryString(node.DefaultDataDir()),
 	}
-	AncientFlag = debug.DirectoryFlag{
+	AncientFlag = flags.DirectoryFlag{
 		Name:  "datadir.ancient",
 		Usage: "Data directory for ancient chain segments (default = inside chaindata)",
 	}
-	MinFreeDiskSpaceFlag = debug.DirectoryFlag{
+	MinFreeDiskSpaceFlag = flags.DirectoryFlag{
 		Name:  "datadir.minfreedisk",
 		Usage: "Minimum free disk space in MB, once reached triggers auto shut down (default = --cache.gc converted to MB, 0 = disabled)",
 	}
-	KeyStoreDirFlag = debug.DirectoryFlag{
+	KeyStoreDirFlag = flags.DirectoryFlag{
 		Name:  "keystore",
 		Usage: "Directory for the keystore (default = inside the datadir)",
 	}
@@ -169,10 +168,10 @@ var (
 		Name:  "identity",
 		Usage: "Custom node name",
 	}
-	DocRootFlag = debug.DirectoryFlag{
+	DocRootFlag = flags.DirectoryFlag{
 		Name:  "docroot",
 		Usage: "Document Root for HTTPClient file scheme",
-		Value: debug.DirectoryString(debug.HomeDir()),
+		Value: flags.DirectoryString(flags.HomeDir()),
 	}
 	ExitWhenSyncedFlag = cli.BoolFlag{
 		Name:  "exitwhensynced",
@@ -285,7 +284,7 @@ var (
 		Usage: "Enables serving light clients before syncing",
 	}
 	// Ethash settings
-	EthashCacheDirFlag = debug.DirectoryFlag{
+	EthashCacheDirFlag = flags.DirectoryFlag{
 		Name:  "ethash.cachedir",
 		Usage: "Directory to store the ethash verification caches (default = inside the datadir)",
 	}
@@ -303,10 +302,10 @@ var (
 		Name:  "ethash.cacheslockmmap",
 		Usage: "Lock memory maps of recent ethash caches",
 	}
-	EthashDatasetDirFlag = debug.DirectoryFlag{
+	EthashDatasetDirFlag = flags.DirectoryFlag{
 		Name:  "ethash.dagdir",
 		Usage: "Directory to store the ethash mining DAGs",
-		Value: debug.DirectoryString(ethconfig.Defaults.Ethash.DatasetDir),
+		Value: flags.DirectoryString(ethconfig.Defaults.Ethash.DatasetDir),
 	}
 	EthashDatasetsInMemoryFlag = cli.IntFlag{
 		Name:  "ethash.dagsinmem",
@@ -518,7 +517,7 @@ var (
 		Name:  "ipcdisable",
 		Usage: "Disable the IPC-RPC server",
 	}
-	IPCPathFlag = debug.DirectoryFlag{
+	IPCPathFlag = flags.DirectoryFlag{
 		Name:  "ipcpath",
 		Usage: "Filename for IPC socket/pipe within the datadir (explicit paths escape it)",
 	}
@@ -677,10 +676,10 @@ var (
 	}
 
 	// ATM the url is left to the user and deployment to
-	JSpathFlag = debug.DirectoryFlag{
+	JSpathFlag = flags.DirectoryFlag{
 		Name:  "jspath",
 		Usage: "JavaScript root path for `loadScript`",
-		Value: debug.DirectoryString("."),
+		Value: flags.DirectoryString("."),
 	}
 
 	// Gas price oracle settings
