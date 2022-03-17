@@ -21,7 +21,9 @@ import (
 	"io"
 	"net/http"
 	_ "net/http/pprof"
+	"net/url"
 	"os"
+	"path"
 	"runtime"
 
 	"github.com/ethereum/go-ethereum/log"
@@ -30,6 +32,7 @@ import (
 	"github.com/fjl/memsize/memsizeui"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
+	"golang.org/x/sys/unix"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -63,7 +66,7 @@ var (
 	logLocationFlag = DirectoryFlag{
 		Name:  "log.folder",
 		Usage: "Location where the log files should be placed",
-		Value: "./logs/",
+		Value: DirectoryString("./logs/"),
 	}
 	pprofFlag = cli.BoolFlag{
 		Name:  "pprof",
@@ -105,6 +108,7 @@ var Flags = []cli.Flag{
 	logjsonFlag,
 	backtraceAtFlag,
 	debugFlag,
+	logLocationFlag,
 	pprofFlag,
 	pprofAddrFlag,
 	pprofPortFlag,
@@ -139,14 +143,22 @@ func Setup(ctx *cli.Context) error {
 		fmtr = log.TerminalFormat(usecolor)
 	}
 
-	outWriter := log.StreamHandler(&lumberjack.Logger{
-		Filename:   "./logs/log.log",
-		MaxSize:    100,
-		MaxBackups: 7,
-		MaxAge:     10,
-	}, fmtr)
+	stdHandler := log.StreamHandler(output, fmtr)
+	locationURL, err := getLogLocationURL(ctx)
+	if err != nil {
+		log.Warn("issue with initiatilizing file logger", "err", err)
+		ostream = stdHandler
+	} else {
+		lumberjackHandler := log.StreamHandler(&lumberjack.Logger{
+			Filename:   path.Join(locationURL.Path, "log.log"),
+			MaxSize:    100,
+			MaxBackups: 7,
+			MaxAge:     10,
+		}, fmtr)
 
-	ostream = log.MultiHandler(outWriter, log.StreamHandler(output, fmtr))
+		ostream = log.MultiHandler(lumberjackHandler, stdHandler)
+	}
+
 	glogger.SetHandler(ostream)
 
 	// logging
@@ -221,4 +233,19 @@ func StartPProf(address string, withMetrics bool) {
 func Exit() {
 	Handler.StopCPUProfile()
 	Handler.StopGoTrace()
+}
+
+func getLogLocationURL(ctx *cli.Context) (*url.URL, error) {
+	locationURL, err := url.Parse(ctx.GlobalString(logLocationFlag.Name))
+	if err == nil {
+		if !writable(locationURL.Path) {
+			return nil, fmt.Errorf("write access not present for given log location")
+		}
+	}
+
+	return locationURL, err
+}
+
+func writable(path string) bool {
+	return unix.Access(path, unix.W_OK) == nil
 }
