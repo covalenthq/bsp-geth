@@ -40,6 +40,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/internal/debug"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
@@ -662,7 +663,7 @@ func signer(c *cli.Context) error {
 // persistence requirements.
 func DefaultConfigDir() string {
 	// Try to place the data folder in the user's home dir
-	home := flags.HomeDir()
+	home := debug.HomeDir()
 	if home != "" {
 		if runtime.GOOS == "darwin" {
 			return filepath.Join(home, "Library", "Signer")
