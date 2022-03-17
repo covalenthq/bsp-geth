@@ -74,10 +74,10 @@ var (
 		Usage:    "Prepends log messages with call-site location (file and line number)",
 		Category: flags.LoggingCategory,
 	}
-	logLocationFlag = &DirectoryFlag{
+	logLocationFlag = &flags.DirectoryFlag{
 		Name:  "log.folder",
 		Usage: "Location where the log files should be placed",
-		Value: DirectoryString("./logs/"),
+		Value: flags.DirectoryString("./logs/"),
 	}
 	pprofFlag = &cli.BoolFlag{
 		Name:     "pprof",
