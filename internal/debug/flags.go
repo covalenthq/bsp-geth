@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	_ "net/http/pprof" // nolint: gosec
+	_ "net/http/pprof"
+	"net/url"
 	"os"
+	"path"
 	"runtime"
 
 	"github.com/ethereum/go-ethereum/internal/flags"
@@ -32,6 +34,7 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/sys/unix"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -74,7 +77,7 @@ var (
 	logLocationFlag = &DirectoryFlag{
 		Name:  "log.folder",
 		Usage: "Location where the log files should be placed",
-		Value: "./logs/",
+		Value: DirectoryString("./logs/"),
 	}
 	pprofFlag = &cli.BoolFlag{
 		Name:     "pprof",
@@ -124,6 +127,7 @@ var Flags = []cli.Flag{
 	logFileFlag,
 	backtraceAtFlag,
 	debugFlag,
+	logLocationFlag,
 	pprofFlag,
 	pprofAddrFlag,
 	pprofPortFlag,
@@ -147,6 +151,7 @@ func init() {
 // Setup initializes profiling and logging based on the CLI flags.
 // It should be called as early as possible in the program.
 func Setup(ctx *cli.Context) error {
+	var ostream log.Handler
 	output := io.Writer(os.Stderr)
 
 	var fmtr log.Format
@@ -160,14 +165,22 @@ func Setup(ctx *cli.Context) error {
 		fmtr = log.TerminalFormat(usecolor)
 	}
 
-	outWriter := log.StreamHandler(&lumberjack.Logger{
-		Filename:   "./logs/log.log",
-		MaxSize:    100,
-		MaxBackups: 7,
-		MaxAge:     10,
-	}, fmtr)
+	stdHandler := log.StreamHandler(output, fmtr)
+	locationURL, err := getLogLocationURL(ctx)
+	if err != nil {
+		log.Warn("issue with initiatilizing file logger", "err", err)
+		ostream = stdHandler
+	} else {
+		lumberjackHandler := log.StreamHandler(&lumberjack.Logger{
+			Filename:   path.Join(locationURL.Path, "log.log"),
+			MaxSize:    100,
+			MaxBackups: 7,
+			MaxAge:     10,
+		}, fmtr)
 
-	ostream := log.MultiHandler(outWriter, log.StreamHandler(output, fmtr))
+		ostream = log.MultiHandler(lumberjackHandler, stdHandler)
+	}
+
 	glogger.SetHandler(ostream)
 
 	// logging
@@ -245,4 +258,19 @@ func Exit() {
 	if closer, ok := logOutputStream.(io.Closer); ok {
 		closer.Close()
 	}
+}
+
+func getLogLocationURL(ctx *cli.Context) (*url.URL, error) {
+	locationURL, err := url.Parse(ctx.String(logLocationFlag.Name))
+	if err == nil {
+		if !writable(locationURL.Path) {
+			return nil, fmt.Errorf("write access not present for given log location")
+		}
+	}
+
+	return locationURL, err
+}
+
+func writable(path string) bool {
+	return unix.Access(path, unix.W_OK) == nil
 }
