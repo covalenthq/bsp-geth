@@ -58,11 +58,6 @@ var (
 		Usage:    "Format logs with JSON",
 		Category: flags.LoggingCategory,
 	}
-	logFileFlag = &cli.StringFlag{
-		Name:     "log.file",
-		Usage:    "Write logs to a file",
-		Category: flags.LoggingCategory,
-	}
 	backtraceAtFlag = &cli.StringFlag{
 		Name:     "log.backtrace",
 		Usage:    "Request a stack trace at a specific logging statement (e.g. \"block.go:271\")",
@@ -124,7 +119,6 @@ var Flags = []cli.Flag{
 	verbosityFlag,
 	vmoduleFlag,
 	logjsonFlag,
-	logFileFlag,
 	backtraceAtFlag,
 	debugFlag,
 	logLocationFlag,
@@ -263,12 +257,22 @@ func Exit() {
 func getLogLocationURL(ctx *cli.Context) (*url.URL, error) {
 	locationURL, err := url.Parse(ctx.String(logLocationFlag.Name))
 	if err == nil {
+		if _, existErr := os.Stat(locationURL.Path); os.IsNotExist(existErr) {
+			// directory doesn't exist, create
+			createErr := os.Mkdir(locationURL.Path, os.ModePerm)
+			if createErr != nil {
+				return nil, fmt.Errorf("error creating the directory: %w", createErr)
+			}
+		}
+
 		if !writable(locationURL.Path) {
 			return nil, fmt.Errorf("write access not present for given log location")
 		}
+
+		return locationURL, nil
 	}
 
-	return locationURL, err
+	return locationURL, fmt.Errorf("log-folder: %w", err)
 }
 
 func writable(path string) bool {
