@@ -251,6 +251,14 @@ func Exit() {
 func getLogLocationURL(ctx *cli.Context) (*url.URL, error) {
 	locationURL, err := url.Parse(ctx.String(logLocationFlag.Name))
 	if err == nil {
+		if _, existErr := os.Stat(locationURL.Path); os.IsNotExist(existErr) {
+			// directory doesn't exist, create
+			createErr := os.Mkdir(locationURL.Path, os.ModePerm)
+			if createErr != nil {
+				return nil, fmt.Errorf("error creating the directory: %v", createErr)
+			}
+		}
+
 		if !writable(locationURL.Path) {
 			return nil, fmt.Errorf("write access not present for given log location")
 		}
