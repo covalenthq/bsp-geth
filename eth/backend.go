@@ -99,12 +99,10 @@ type Ethereum struct {
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 
-<<<<<<< HEAD
+	shutdownTracker *shutdowncheck.ShutdownTracker // Tracks if and when the node has shutdown ungracefully
+
 	blockReplicators []*core.ChainReplicator
 	ReplicaConfig    *core.ReplicaConfig
-=======
-	shutdownTracker *shutdowncheck.ShutdownTracker // Tracks if and when the node has shutdown ungracefully
->>>>>>> 20356e57b119b4e70ce47665a71964434e15200d
 }
 
 // New creates a new Ethereum object (including the
@@ -169,8 +167,9 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 
 		blockReplicators: make([]*core.ChainReplicator, 0),
 		ReplicaConfig: &core.ReplicaConfig{
-			EnableSpecimen: config.ReplicaEnableSpecimen,
-			EnableResult:   config.ReplicaEnableResult,
+			EnableSpecimen:         config.ReplicaEnableSpecimen,
+			EnableResult:           config.ReplicaEnableResult,
+			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
 		},
 	}
 

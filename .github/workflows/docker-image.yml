@@ -2,9 +2,9 @@ name: docker-image-ci
 
 on:
   push:
-    branches: [ covalent ]
+    branches: [ main ]
   pull_request:
-    branches: [ covalent ]
+    branches: [ main ]
 
 jobs:
   push-image:
