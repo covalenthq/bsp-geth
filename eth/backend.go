@@ -159,8 +159,9 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 
 		blockReplicators: make([]*core.ChainReplicator, 0),
 		ReplicaConfig: &core.ReplicaConfig{
-			EnableSpecimen: config.ReplicaEnableSpecimen,
-			EnableResult:   config.ReplicaEnableResult,
+			EnableSpecimen:         config.ReplicaEnableSpecimen,
+			EnableResult:           config.ReplicaEnableResult,
+			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
 		},
 	}
 

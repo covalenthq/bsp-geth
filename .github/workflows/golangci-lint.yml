@@ -3,10 +3,10 @@ name: golangci-lint
 on:
   push:
     branches: 
-      - covalent 
+      - main 
   pull_request:
     branches:
-      - covalent
+      - main
 
 permissions:
   contents: read

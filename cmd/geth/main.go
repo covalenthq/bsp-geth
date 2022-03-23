@@ -418,6 +418,31 @@ func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend) {
 			utils.Fatalf("Failed to start mining: %v", err)
 		}
 	}
+
+	// Spawn a standalone goroutine for status synchronization monitoring,
+	// if full sync is completed in block specimen creation mode set replica config flag
+	if ctx.GlobalBool(utils.ReplicaEnableSpecimenFlag.Name) || ctx.GlobalBool(utils.ReplicaEnableResultFlag.Name) {
+		log.Info("Synchronisation started, historical blocks synced set to 0")
+		go func() {
+			sub := stack.EventMux().Subscribe(downloader.DoneEvent{})
+			defer sub.Unsubscribe()
+			for {
+				event := <-sub.Chan()
+				if event == nil {
+					continue
+				}
+				done, ok := event.Data.(downloader.DoneEvent)
+				if !ok {
+					continue
+				}
+				if timestamp := time.Unix(int64(done.Latest.Time), 0); time.Since(timestamp) < 10*time.Minute {
+					log.Info("Synchronisation completed, setting historical blocks synced to 1", "latestnum", done.Latest.Number, "latesthash", done.Latest.Hash(),
+						"age", common.PrettyAge(timestamp))
+					backend.SetHistoricalBlocksSynced()
+				}
+			}
+		}()
+	}
 }
 
 // unlockAccounts unlocks any account specifically requested.

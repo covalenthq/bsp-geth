@@ -218,8 +218,9 @@ type BlockChain struct {
 }
 
 type ReplicaConfig struct {
-	EnableSpecimen bool
-	EnableResult   bool
+	EnableSpecimen         bool
+	EnableResult           bool
+	HistoricalBlocksSynced *uint32
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -259,7 +260,11 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 		vmConfig:       vmConfig,
 
 		blockReplicationFeed: event.Feed{},
-		ReplicaConfig:        &ReplicaConfig{},
+		ReplicaConfig: &ReplicaConfig{
+			EnableSpecimen:         false,
+			EnableResult:           false,
+			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
+		},
 	}
 	bc.validator = NewBlockValidator(chainConfig, bc, engine)
 	bc.prefetcher = newStatePrefetcher(chainConfig, bc, engine)
