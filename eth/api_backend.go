@@ -20,8 +20,8 @@ import (
 	"context"
 	"errors"
 	"math/big"
-	"sync/atomic"
 	"time"
+  "sync/atomic"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts"
