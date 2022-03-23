@@ -210,8 +210,6 @@ type BlockChain struct {
 	forker     *ForkChoice
 	vmConfig   vm.Config
 
-	shouldPreserve func(*types.Block) bool // Function used to determine whether should preserve the given block.
-
 	blockReplicationFeed event.Feed
 	ReplicaConfig        *ReplicaConfig
 }
