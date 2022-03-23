@@ -33,12 +33,21 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 
 	sHash := block.Hash().String()
 
-	log.Info("Creating block replication event", "block number", block.NumberU64(), "hash", sHash)
-	bc.blockReplicationFeed.Send(BlockReplicationEvent{
-		sHash,
-		blockReplicaRLP,
-	})
+	fmt.Println("value of Historicalk blocks synced", replicaConfig.HistoricalBlocksSynced)
 
+	if replicaConfig.HistoricalBlocksSynced == 0 {
+		log.Info("Value of block sync flag is 0")
+	}
+
+	if replicaConfig.HistoricalBlocksSynced == 1 {
+		log.Info("Creating block replication event for most recent", "block number", block.NumberU64(), "hash", sHash)
+		bc.blockReplicationFeed.Send(BlockReplicationEvent{
+			sHash,
+			blockReplicaRLP,
+		})
+	}
+
+	log.Info("Syncing Historical Block: ", block.Number().Uint64())
 	return nil
 }
 

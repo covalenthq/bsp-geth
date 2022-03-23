@@ -19,6 +19,7 @@ package eth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
@@ -353,4 +354,15 @@ func (b *EthAPIBackend) StateAtBlock(ctx context.Context, block *types.Block, re
 
 func (b *EthAPIBackend) StateAtTransaction(ctx context.Context, block *types.Block, txIndex int, reexec uint64) (core.Message, vm.BlockContext, *state.StateDB, error) {
 	return b.eth.stateAtTransaction(block, txIndex, reexec)
+}
+
+// SetHistoricalBlocksSynced returns a suggestion for a gas price for legacy transactions.
+func (b *EthAPIBackend) SetHistoricalBlocksSynced() uint32 {
+	if b.eth.handler.acceptTxs == 0 {
+		fmt.Println("Cannot accept new transactions at the moment due to historical sync")
+		return 0
+	} else {
+		b.eth.ReplicaConfig.HistoricalBlocksSynced = 1
+		return 1
+	}
 }
