@@ -172,8 +172,9 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		shutdownTracker:   shutdowncheck.NewShutdownTracker(chainDb),
 		blockReplicators:  make([]*core.ChainReplicator, 0),
 		ReplicaConfig: &core.ReplicaConfig{
-			EnableSpecimen: config.ReplicaEnableSpecimen,
-			EnableResult:   config.ReplicaEnableResult,
+			EnableSpecimen:         config.ReplicaEnableSpecimen,
+			EnableResult:           config.ReplicaEnableResult,
+			HistoricalBlocksSynced: 0,
 		},
 	}
 
