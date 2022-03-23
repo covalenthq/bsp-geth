@@ -420,6 +420,7 @@ func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend) {
 	}
 
 	// Spawn a standalone goroutine for status synchronization monitoring,
+	// if full sync is completed in block specimen creation mode set replica config flag
 	if ctx.GlobalBool(utils.ReplicaEnableSpecimenFlag.Name) || ctx.GlobalBool(utils.ReplicaEnableResultFlag.Name) {
 		log.Info("Synchronisation started, historical blocks synced set to 0")
 		go func() {
@@ -434,7 +435,7 @@ func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend) {
 				if !ok {
 					continue
 				}
-				if timestamp := time.Unix(int64(done.Latest.Time), 0); time.Since(timestamp) < 1*time.Minute {
+				if timestamp := time.Unix(int64(done.Latest.Time), 0); time.Since(timestamp) < 10*time.Minute {
 					log.Info("Synchronisation completed, setting historical blocks synced to 1", "latestnum", done.Latest.Number, "latesthash", done.Latest.Hash(),
 						"age", common.PrettyAge(timestamp))
 					backend.SetHistoricalBlocksSynced()

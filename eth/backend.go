@@ -161,7 +161,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		ReplicaConfig: &core.ReplicaConfig{
 			EnableSpecimen:         config.ReplicaEnableSpecimen,
 			EnableResult:           config.ReplicaEnableResult,
-			HistoricalBlocksSynced: 0,
+			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
 		},
 	}
 
