@@ -3,10 +3,10 @@ name: build-test
 on:
   push:
     branches: 
-      - covalent 
+      - main 
   pull_request:
     branches:
-      - covalent
+      - main
 
 jobs:
   audit:
