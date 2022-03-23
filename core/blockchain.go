@@ -257,7 +257,11 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 		engine:               engine,
 		vmConfig:             vmConfig,
 		blockReplicationFeed: event.Feed{},
-		ReplicaConfig:        &ReplicaConfig{},
+		ReplicaConfig: &ReplicaConfig{
+			EnableSpecimen:         false,
+			EnableResult:           false,
+			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
+		},
 	}
 	bc.forker = NewForkChoice(bc, shouldPreserve)
 	bc.validator = NewBlockValidator(chainConfig, bc, engine)
