@@ -376,7 +376,7 @@ func (b *EthAPIBackend) SetHistoricalBlocksSynced() bool {
 		log.Info("Fully Synced, BSP running in live sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.ReplicaConfig.HistoricalBlocksSynced))
 		return true
 	} else {
-		log.Info("Not accepting new transactions, BSP running in historical sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.ReplicaConfig.HistoricalBlocksSynced))
+		log.Error("Not accepting new transactions, BSP running in historical sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.ReplicaConfig.HistoricalBlocksSynced))
 		return false
 	}
 }
