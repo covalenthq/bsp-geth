@@ -80,8 +80,9 @@ type freezer struct {
 	frozen    uint64 // Number of blocks already frozen
 	threshold uint64 // Number of recent blocks not to freeze (params.FullImmutabilityThreshold apart from tests)
 
-	// This lock synchronizes writers and the truncate operation.
-	writeLock  sync.Mutex
+	// This lock synchronizes writers and the truncate operation, as well as
+	// the "atomic" (batched) read operations.
+	writeLock  sync.RWMutex
 	writeBatch *freezerBatch
 
 	readonly     bool
@@ -132,7 +133,7 @@ func newFreezer(datadir string, namespace string, readonly bool, maxTableSize ui
 
 	// Create the tables.
 	for name, disableSnappy := range tables {
-		table, err := newTable(datadir, name, readMeter, writeMeter, sizeGauge, maxTableSize, disableSnappy)
+		table, err := newTable(datadir, name, readMeter, writeMeter, sizeGauge, maxTableSize, disableSnappy, readonly)
 		if err != nil {
 			for _, table := range freezer.tables {
 				table.Close()
@@ -143,8 +144,15 @@ func newFreezer(datadir string, namespace string, readonly bool, maxTableSize ui
 		freezer.tables[name] = table
 	}
 
-	// Truncate all tables to common length.
-	if err := freezer.repair(); err != nil {
+	if freezer.readonly {
+		// In readonly mode only validate, don't truncate.
+		// validate also sets `freezer.frozen`.
+		err = freezer.validate()
+	} else {
+		// Truncate all tables to common length.
+		err = freezer.repair()
+	}
+	if err != nil {
 		for _, table := range freezer.tables {
 			table.Close()
 		}
@@ -201,12 +209,12 @@ func (f *freezer) Ancient(kind string, number uint64) ([]byte, error) {
 	return nil, errUnknownTable
 }
 
-// ReadAncients retrieves multiple items in sequence, starting from the index 'start'.
+// AncientRange retrieves multiple items in sequence, starting from the index 'start'.
 // It will return
 //  - at most 'max' items,
 //  - at least 1 item (even if exceeding the maxByteSize), but will otherwise
 //   return as many items as fit into maxByteSize.
-func (f *freezer) ReadAncients(kind string, start, count, maxBytes uint64) ([][]byte, error) {
+func (f *freezer) AncientRange(kind string, start, count, maxBytes uint64) ([][]byte, error) {
 	if table := f.tables[kind]; table != nil {
 		return table.RetrieveItems(start, count, maxBytes)
 	}
@@ -222,13 +230,21 @@ func (f *freezer) Ancients() (uint64, error) {
 func (f *freezer) AncientSize(kind string) (uint64, error) {
 	// This needs the write lock to avoid data races on table fields.
 	// Speed doesn't matter here, AncientSize is for debugging.
-	f.writeLock.Lock()
-	defer f.writeLock.Unlock()
+	f.writeLock.RLock()
+	defer f.writeLock.RUnlock()
 
 	if table := f.tables[kind]; table != nil {
 		return table.size()
 	}
 	return 0, errUnknownTable
+}
+
+// ReadAncients runs the given read operation while ensuring that no writes take place
+// on the underlying freezer.
+func (f *freezer) ReadAncients(fn func(ethdb.AncientReader) error) (err error) {
+	f.writeLock.RLock()
+	defer f.writeLock.RUnlock()
+	return fn(f)
 }
 
 // ModifyAncients runs the given write operation.
@@ -296,6 +312,33 @@ func (f *freezer) Sync() error {
 	if errs != nil {
 		return fmt.Errorf("%v", errs)
 	}
+	return nil
+}
+
+// validate checks that every table has the same length.
+// Used instead of `repair` in readonly mode.
+func (f *freezer) validate() error {
+	if len(f.tables) == 0 {
+		return nil
+	}
+	var (
+		length uint64
+		name   string
+	)
+	// Hack to get length of any table
+	for kind, table := range f.tables {
+		length = atomic.LoadUint64(&table.items)
+		name = kind
+		break
+	}
+	// Now check every table against that length
+	for kind, table := range f.tables {
+		items := atomic.LoadUint64(&table.items)
+		if length != items {
+			return fmt.Errorf("freezer tables %s and %s have differing lengths: %d != %d", kind, name, items, length)
+		}
+	}
+	atomic.StoreUint64(&f.frozen, length)
 	return nil
 }
 
