@@ -35,10 +35,10 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 	sHash := block.Hash().String()
 
 	if atomic.LoadUint32(replicaConfig.HistoricalBlocksSynced) == 0 {
-		log.Info("BSP running in Historical mode", "Unexported block ", block.NumberU64(), "hash", sHash)
+		log.Info("BSP running in Live mode", "Unexported block ", block.NumberU64(), "hash", sHash)
 		return nil
 	} else if atomic.LoadUint32(replicaConfig.HistoricalBlocksSynced) == 1 {
-		log.Info("Creating block replication event", "Exported block", block.NumberU64(), "hash", sHash)
+		log.Info("Creating Block Specimen", "Exported block", block.NumberU64(), "hash", sHash)
 		bc.blockReplicationFeed.Send(BlockReplicationEvent{
 			sHash,
 			blockReplicaRLP,
