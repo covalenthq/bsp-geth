@@ -334,11 +334,11 @@ func (b *LesApiBackend) StateAtTransaction(ctx context.Context, block *types.Blo
 }
 
 func (b *LesApiBackend) SetHistoricalBlocksSynced() bool {
-	if b.eth.handler.downloader.Progress().CurrentBlock < b.eth.handler.downloader.Progress().HighestBlock {
-		log.Info("Light Client not fully synced yet and block specimen producer does not operate in light client mode")
+	if b.SyncProgress().CurrentBlock < b.SyncProgress().HighestBlock {
+		log.Crit("Light Client not fully synced yet, block specimen producer not supported in light client mode")
 		return false
 	} else {
-		log.Info("Fully Synced but block specimen producer does not operate in light client mode", "Current block", b.eth.handler.downloader.Progress().CurrentBlock, "Highest block", b.eth.handler.downloader.Progress().HighestBlock)
+		log.Crit("Fully Synced but block specimen producer not supported in light client mode", "Current block", b.eth.handler.downloader.Progress().CurrentBlock, "Highest block", b.eth.handler.downloader.Progress().HighestBlock)
 		return false
 	}
 }
