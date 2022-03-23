@@ -62,6 +62,7 @@ var (
 					utils.DataDirFlag,
 					utils.AncientFlag,
 					utils.RopstenFlag,
+					utils.SepoliaFlag,
 					utils.RinkebyFlag,
 					utils.GoerliFlag,
 					utils.CacheTrieJournalFlag,
@@ -92,6 +93,7 @@ the trie clean cache with default directory will be deleted.
 					utils.DataDirFlag,
 					utils.AncientFlag,
 					utils.RopstenFlag,
+					utils.SepoliaFlag,
 					utils.RinkebyFlag,
 					utils.GoerliFlag,
 				},
@@ -112,6 +114,7 @@ In other words, this command does the snapshot to trie conversion.
 					utils.DataDirFlag,
 					utils.AncientFlag,
 					utils.RopstenFlag,
+					utils.SepoliaFlag,
 					utils.RinkebyFlag,
 					utils.GoerliFlag,
 				},
@@ -134,6 +137,7 @@ It's also usable without snapshot enabled.
 					utils.DataDirFlag,
 					utils.AncientFlag,
 					utils.RopstenFlag,
+					utils.SepoliaFlag,
 					utils.RinkebyFlag,
 					utils.GoerliFlag,
 				},
@@ -157,6 +161,7 @@ It's also usable without snapshot enabled.
 					utils.DataDirFlag,
 					utils.AncientFlag,
 					utils.RopstenFlag,
+					utils.SepoliaFlag,
 					utils.RinkebyFlag,
 					utils.GoerliFlag,
 					utils.ExcludeCodeFlag,
@@ -413,8 +418,7 @@ func traverseRawState(ctx *cli.Context) error {
 					// Check the present for non-empty hash node(embedded node doesn't
 					// have their own hash).
 					if node != (common.Hash{}) {
-						blob := rawdb.ReadTrieNode(chaindb, node)
-						if len(blob) == 0 {
+						if !rawdb.HasTrieNode(chaindb, node) {
 							log.Error("Missing trie node(storage)", "hash", node)
 							return errors.New("missing storage")
 						}
