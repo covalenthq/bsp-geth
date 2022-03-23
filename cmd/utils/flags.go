@@ -111,20 +111,20 @@ func printHelp(out io.Writer, templ string, data interface{}) {
 
 var (
 	// General settings
-	DataDirFlag = DirectoryFlag{
+	DataDirFlag = flags.DirectoryFlag{
 		Name:  "datadir",
 		Usage: "Data directory for the databases and keystore",
-		Value: DirectoryString(node.DefaultDataDir()),
+		Value: flags.DirectoryString(node.DefaultDataDir()),
 	}
-	AncientFlag = DirectoryFlag{
+	AncientFlag = flags.DirectoryFlag{
 		Name:  "datadir.ancient",
 		Usage: "Data directory for ancient chain segments (default = inside chaindata)",
 	}
-	MinFreeDiskSpaceFlag = DirectoryFlag{
+	MinFreeDiskSpaceFlag = flags.DirectoryFlag{
 		Name:  "datadir.minfreedisk",
 		Usage: "Minimum free disk space in MB, once reached triggers auto shut down (default = --cache.gc converted to MB, 0 = disabled)",
 	}
-	KeyStoreDirFlag = DirectoryFlag{
+	KeyStoreDirFlag = flags.DirectoryFlag{
 		Name:  "keystore",
 		Usage: "Directory for the keystore (default = inside the datadir)",
 	}
@@ -179,10 +179,10 @@ var (
 		Name:  "identity",
 		Usage: "Custom node name",
 	}
-	DocRootFlag = DirectoryFlag{
+	DocRootFlag = flags.DirectoryFlag{
 		Name:  "docroot",
 		Usage: "Document Root for HTTPClient file scheme",
-		Value: DirectoryString(HomeDir()),
+		Value: flags.DirectoryString(flags.HomeDir()),
 	}
 	ExitWhenSyncedFlag = cli.BoolFlag{
 		Name:  "exitwhensynced",
@@ -299,7 +299,7 @@ var (
 		Usage: "Enables serving light clients before syncing",
 	}
 	// Ethash settings
-	EthashCacheDirFlag = DirectoryFlag{
+	EthashCacheDirFlag = flags.DirectoryFlag{
 		Name:  "ethash.cachedir",
 		Usage: "Directory to store the ethash verification caches (default = inside the datadir)",
 	}
@@ -317,10 +317,10 @@ var (
 		Name:  "ethash.cacheslockmmap",
 		Usage: "Lock memory maps of recent ethash caches",
 	}
-	EthashDatasetDirFlag = DirectoryFlag{
+	EthashDatasetDirFlag = flags.DirectoryFlag{
 		Name:  "ethash.dagdir",
 		Usage: "Directory to store the ethash mining DAGs",
-		Value: DirectoryString(ethconfig.Defaults.Ethash.DatasetDir),
+		Value: flags.DirectoryString(ethconfig.Defaults.Ethash.DatasetDir),
 	}
 	EthashDatasetsInMemoryFlag = cli.IntFlag{
 		Name:  "ethash.dagsinmem",
@@ -537,7 +537,7 @@ var (
 		Name:  "ipcdisable",
 		Usage: "Disable the IPC-RPC server",
 	}
-	IPCPathFlag = DirectoryFlag{
+	IPCPathFlag = flags.DirectoryFlag{
 		Name:  "ipcpath",
 		Usage: "Filename for IPC socket/pipe within the datadir (explicit paths escape it)",
 	}
@@ -696,10 +696,10 @@ var (
 	}
 
 	// ATM the url is left to the user and deployment to
-	JSpathFlag = DirectoryFlag{
+	JSpathFlag = flags.DirectoryFlag{
 		Name:  "jspath",
 		Usage: "JavaScript root path for `loadScript`",
-		Value: DirectoryString("."),
+		Value: flags.DirectoryString("."),
 	}
 
 	// Gas price oracle settings
