@@ -21,7 +21,7 @@ import (
 	"errors"
 	"math/big"
 	"time"
-  "sync/atomic"
+        "sync/atomic"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts"
