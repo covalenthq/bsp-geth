@@ -36,8 +36,7 @@ services:
     container_name: bsp-geth
     restart:  always
     depends_on:
-      redis:
-        condition: service_started
+      - redis
     entrypoint: ["geth", "--mainnet", "--port", "0", "--log.debug", "--syncmode", "full", "--http", "--datadir", "/data/.ethereum/covalent", "--allow-insecure-unlock", "--preload", "/scripts/geth-setup.js", "--replication.targets", "redis://username:@redis:6379/0?topic=replication", "--replica.result", "--replica.specimen"]
     networks:
       - cqt-net
@@ -55,10 +54,9 @@ services:
     container_name: bsp-agent
     restart:  always
     depends_on:
-      geth:
-        condition: service_started
+      - geth
     volumes:
-      - /Users/pranay/.config/gcloud:/app/gcloud
+      - /Users/$USER/.config/gcloud:/app/gcloud
       - ./data/bin/:/app/bin
     entrypoint: >
       /bin/bash -l -c "
