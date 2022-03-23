@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -36,6 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/gasprice"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/miner"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -367,13 +369,14 @@ func (b *EthAPIBackend) StateAtTransaction(ctx context.Context, block *types.Blo
 	return b.eth.stateAtTransaction(block, txIndex, reexec)
 }
 
-// SetHistoricalBlocksSynced returns a suggestion for a gas price for legacy transactions.
-func (b *EthAPIBackend) SetHistoricalBlocksSynced() uint32 {
-	if b.eth.handler.acceptTxs == 0 {
-		fmt.Println("Cannot accept new transactions at the moment due to historical sync")
-		return 0
+// SetHistoricalBlocksSynced returns a bool for BSP replica config (Historical mode :0 , Live mode: 1)
+func (b *EthAPIBackend) SetHistoricalBlocksSynced() bool {
+	if b.eth.Synced() {
+		atomic.StoreUint32(b.eth.ReplicaConfig.HistoricalBlocksSynced, 1)
+		log.Info("Fully Synced, BSP running in live sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.ReplicaConfig.HistoricalBlocksSynced))
+		return true
 	} else {
-		b.eth.ReplicaConfig.HistoricalBlocksSynced = 1
-		return 1
+		log.Info("Not accepting new transactions, BSP running in historical sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.ReplicaConfig.HistoricalBlocksSynced))
+		return false
 	}
 }

@@ -219,7 +219,7 @@ type BlockChain struct {
 type ReplicaConfig struct {
 	EnableSpecimen         bool
 	EnableResult           bool
-	HistoricalBlocksSynced uint32
+	HistoricalBlocksSynced *uint32
 }
 
 // NewBlockChain returns a fully initialised block chain using information

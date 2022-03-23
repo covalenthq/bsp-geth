@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
+	"sync/atomic"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -33,22 +34,20 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 
 	sHash := block.Hash().String()
 
-	fmt.Println("value of Historicalk blocks synced", replicaConfig.HistoricalBlocksSynced)
-
-	if replicaConfig.HistoricalBlocksSynced == 0 {
-		log.Info("Value of block sync flag is 0")
-	}
-
-	if replicaConfig.HistoricalBlocksSynced == 1 {
-		log.Info("Creating block replication event for most recent", "block number", block.NumberU64(), "hash", sHash)
+	if atomic.LoadUint32(replicaConfig.HistoricalBlocksSynced) == 0 {
+		log.Info("BSP running in Historical mode", "Unexported block ", block.NumberU64(), "hash", sHash)
+		return nil
+	} else if atomic.LoadUint32(replicaConfig.HistoricalBlocksSynced) == 1 {
+		log.Info("Creating block replication event", "Exported block", block.NumberU64(), "hash", sHash)
 		bc.blockReplicationFeed.Send(BlockReplicationEvent{
 			sHash,
 			blockReplicaRLP,
 		})
+		return nil
+	} else {
+		return fmt.Errorf("error in setting atomic config historical block sync: %v", replicaConfig.HistoricalBlocksSynced)
 	}
 
-	log.Info("Syncing Historical Block: ", block.Number().Uint64())
-	return nil
 }
 
 func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.ExportBlockReplica, error) {
