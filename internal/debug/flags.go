@@ -255,16 +255,18 @@ func getLogLocationURL(ctx *cli.Context) (*url.URL, error) {
 			// directory doesn't exist, create
 			createErr := os.Mkdir(locationURL.Path, os.ModePerm)
 			if createErr != nil {
-				return nil, fmt.Errorf("error creating the directory: %v", createErr)
+				return nil, fmt.Errorf("error creating the directory: %w", createErr)
 			}
 		}
 
 		if !writable(locationURL.Path) {
 			return nil, fmt.Errorf("write access not present for given log location")
 		}
+
+		return locationURL, nil
 	}
 
-	return locationURL, err
+	return locationURL, fmt.Errorf("log-folder: %w", err)
 }
 
 func writable(path string) bool {
