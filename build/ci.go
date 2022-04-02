@@ -295,7 +295,7 @@ func doTest(cmdline []string) {
 	// and some tests run into timeouts under load.
 	gotest.Args = append(gotest.Args, "-p", "1")
 	if *coverage {
-		gotest.Args = append(gotest.Args, "-covermode=atomic", "-cover")
+		gotest.Args = append(gotest.Args, "-covermode=atomic", "-cover", "-coverprofile=coverage.out")
 	}
 	if *verbose {
 		gotest.Args = append(gotest.Args, "-v")

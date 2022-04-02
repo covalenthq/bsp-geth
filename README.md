@@ -33,6 +33,9 @@
   <a href="https://github.com/covalenthq/bsp-geth/actions/workflows/build-test.yml?query=branch%3Acovalent+workflow%3Abuild-test">
     <img alt="Test Status" src="https://github.com/covalenthq/bsp-geth/actions/workflows/build-test.yml/badge.svg?branch=covalent" />
   </a>
+  <a href="https://codecov.io/gh/covalenthq/bsp-geth">
+    <img alt="Code Coverage" src="https://codecov.io/gh/covalenthq/bsp-geth/branch/main/graph/badge.svg" />
+  </a>
   <a href="https://twitter.com/@Covalent_HQ">
     <img alt="Twitter Follow Covalent" src="https://img.shields.io/twitter/follow/Covalent_HQ"/>
   </a>
