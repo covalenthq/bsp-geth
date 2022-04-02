@@ -29,8 +29,9 @@ jobs:
       run: make all
 
     - name: Run tests
-      #run: go test -race -vet=off ./... -tags=
       run: make test
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
 
     - name: Clean
       run: make clean
