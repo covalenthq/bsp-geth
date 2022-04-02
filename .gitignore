@@ -53,3 +53,4 @@ ganache_data/
 .env
 scripts/
 logs/
+coverage.out
