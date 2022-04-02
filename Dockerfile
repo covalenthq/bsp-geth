@@ -6,7 +6,7 @@ ARG USER=$USER
 
 
 # Build Geth in a stock Go builder container
-FROM golang:1.17-alpine as builder
+FROM golang:1.18-alpine as builder
 
 RUN apk add --no-cache gcc=10.3.1_git20211027-r0 musl-dev=1.2.2-r7 linux-headers=5.10.41-r0 git=2.34.1-r0
 
