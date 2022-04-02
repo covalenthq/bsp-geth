@@ -54,3 +54,4 @@ ganache_data/
 scripts/
 logs/
 coverage.out
+coverage.txt
