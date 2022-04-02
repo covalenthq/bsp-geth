@@ -30,8 +30,9 @@ jobs:
 
     - name: Run tests
       run: make test
+
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
+      run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
 
     - name: Clean
       run: make clean
