@@ -175,6 +175,7 @@ func startClient(t *testing.T, name string) *gethrpc {
 }
 
 func TestPriorityClient(t *testing.T) {
+	t.Skip() // skipping test which uses light sync mode
 	lightServer := startLightServer(t)
 	defer lightServer.killAndWait()
 
