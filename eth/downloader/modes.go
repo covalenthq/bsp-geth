@@ -30,7 +30,7 @@ const (
 
 func (mode SyncMode) IsValid() bool {
 	// not allowing light mode for bsp-geth as block specimen production in this mode is untested for now.
-	return mode >= FullSync && mode <= SnapSync
+	return mode >= FullSync && mode <= LightSync
 }
 
 // String implements the stringer interface.
