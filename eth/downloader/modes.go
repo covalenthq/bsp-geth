@@ -29,7 +29,8 @@ const (
 )
 
 func (mode SyncMode) IsValid() bool {
-	return mode >= FullSync && mode <= LightSync
+	// not allowing light mode for bsp-geth as block specimen production in this mode is untested for now.
+	return mode >= FullSync && mode <= SnapSync
 }
 
 // String implements the stringer interface.
@@ -39,8 +40,8 @@ func (mode SyncMode) String() string {
 		return "full"
 	case SnapSync:
 		return "snap"
-	case LightSync:
-		return "light"
+	// case LightSync:
+	// 	return "light"
 	default:
 		return "unknown"
 	}
@@ -52,8 +53,8 @@ func (mode SyncMode) MarshalText() ([]byte, error) {
 		return []byte("full"), nil
 	case SnapSync:
 		return []byte("snap"), nil
-	case LightSync:
-		return []byte("light"), nil
+	// case LightSync:
+	// 	return []byte("light"), nil
 	default:
 		return nil, fmt.Errorf("unknown sync mode %d", mode)
 	}
@@ -65,10 +66,10 @@ func (mode *SyncMode) UnmarshalText(text []byte) error {
 		*mode = FullSync
 	case "snap":
 		*mode = SnapSync
-	case "light":
-		*mode = LightSync
+	// case "light":
+	// 	*mode = LightSync
 	default:
-		return fmt.Errorf(`unknown sync mode %q, want "full", "snap" or "light"`, text)
+		return fmt.Errorf(`unknown sync mode %q, want "full" or "snap"`, text)
 	}
 	return nil
 }
