@@ -2,7 +2,7 @@
 
 <div align="center">
   <a href="https://github.com/covalenthq/bsp-geth/releases/latest">
-    <img alt="Version" src="https://img.shields.io/badge/tag-v1.0.0-yellowgreen" />
+    <img alt="Version" src="https://img.shields.io/github/tag/covalenthq/bsp-agent.svg" />
   </a>
   <a href="https://github.com/covalenthq/bsp-geth/blob/main/LICENSE">
     <img alt="License: " src="https://img.shields.io/badge/license-MIT-green" />
@@ -204,7 +204,7 @@ Clone the `covalenthq/bsp-geth` repo and checkout the branch that contains the b
 ```sh
 git clone git@github.com:covalenthq/bsp-geth.git
 cd bsp-geth
-git checkout covalent
+git checkout main
 ```
 
 Build `geth` from source (install [`Go`](https://go.dev/doc/install) if you don’t have it) and other geth developer tools from root. Make sure you also have [`make`](https://www.gnu.org/software/make/) that is used too build and install bsp-geth. If you need all the go-ethereum development related tools do a `make all`.
@@ -230,9 +230,9 @@ $ redis-cli
 PONG
 ```
 
-We are now ready to start accepting stream message into redis locally
+We are now ready to start accepting stream message into redis locally. Kindly note that [redis streams](https://redis.io/docs/manual/data-types/streams/) uses in-memory data structures to store new messages (but those are written to disk at the time of exit / closing the server) and can lead to large memory requirements if not managed properly.
 
-Now start `geth` from root with the given configuration, here we specify the replication targets (block specimen targets) with redis stream topic key `replication`, running `geth` in full `syncmode`, exposing the http port for the geth apis are optional.
+Now start `geth` from root with the given configuration, here we specify the replication targets (block specimen targets) with redis stream topic key `replication-1`, running `geth` in `full` or `snap` syncmode, exposing the http port for the geth apis are optional. bsp-geth can be run as usually run when run as a full / snap node with the extra flags provided here.
 
 Prior to executing, please replace `<user>` with correct local username within the `--datadir` flag. Everything else remains the same as given below.
 
@@ -240,35 +240,74 @@ Prior to executing, please replace `<user>` with correct local username within t
 ./build/bin/geth \
   --mainnet \
   --log.debug \
-  --syncmode full \
-  --datadir ~/.ethereum/bsp \
-  --replication.targets "redis://localhost:6379/?topic=replication" \
+  --syncmode snap \
+  --datadir <user>/scratch/node/ethereum/ \
+  --replication.targets "redis://localhost:6379/?topic=replication-1" \
   --replica.result \
-  --replica.specimen
+  --replica.specimen \
+  --log.folder "./logs/"
 ```
 
-Expect to see the following logs from `bsp-geth` service in approx ~ 10 mins as the node begins to sync and export Block Specimens
+`bsp-geth` only produces block specimens for live blocks once state sync is complete. In order to check the status of your sync progress. Connect to the node’s IPC instance to check how far the node is synced.
 
 ```bash
-bsp-geth             | INFO [02-04|17:11:50.991|core/block_replica.go:36]             Creating block replication event         block number=1,103,839 hash=0x2118a7c7a71e65227f8c6dd2b36ef89bc6d71a3b2ef249f026f43f99b0ab4912
-bsp-geth             | INFO [02-04|17:11:50.993|core/block_replica.go:36]             Creating block replication event         block number=1,103,840 hash=0x77a8439b4f6423cc4a9d4af950c8d024146900c7ce3edbaf154a514e5522c54a
-bsp-geth             | INFO [02-04|17:11:50.999|core/block_replica.go:36]             Creating block replication event         block number=1,103,841 hash=0x90c7ace11146f97adb9e50e3e5cbcb151323f5d038a3d25362906bd91f1c5aba
+./build/bin/geth attach <user>/scratch/node/ethereum/geth.ipc
 ```
 
-The last two lines above show that new block replicas containing the block specimens are being produced and streamed to the redis topic “replication”.
+Once connected wait for the node at a given `currentBlock` to reach the `highestblock` to start creating live block specimens. `startingBlock` can be 0 or any number depending on the chaindata sync status in `datadir`.
 
-Please note it may take anywhere from 2-10 mins to reach this point depending on the strength of the network and other factors that affect the Ethereum network p2p protocol performance.
+```bash
+Welcome to the Geth JavaScript console!
 
-After this you can check that redis is stacking up the bsp messages through the redis-cli with the command below (this should give you a bunch of messages from the stream)
+instance: Geth/v1.10.17-stable-d1a92cb2/darwin-arm64/go1.17.2
+at block: 10487792 (Mon Apr 11 2022 14:01:59 GMT-0700 (PDT))
+ datadir: <user>/scratch/node/ethereum/
+ modules: admin:1.0 clique:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0
+
+To exit, press ctrl-d or type exit
+> eth.syncing
+{
+  currentBlock: 10487906,
+  healedBytecodeBytes: 0,
+  healedBytecodes: 0,
+  healedTrienodeBytes: 0,
+  healedTrienodes: 0,
+  healingBytecode: 0,
+  healingTrienodes: 0,
+  highestBlock: 10499433,
+  startingBlock: 10486736,
+  syncedAccountBytes: 0,
+  syncedAccounts: 0,
+  syncedBytecodeBytes: 0,
+  syncedBytecodes: 0,
+  syncedStorage: 0,
+  syncedStorageBytes: 0
+}
+
+> eth.syncing
+false
+```
+
+This can take a few days or a few hours depending on if the source chaindata is already available at the `datadir` location or live sync is being attempted from scratch for a new copy of blockchain data obtained from syncing with peers. In the case of the latter the strength of the network and other factors that affect the Ethereum network devp2p protocol performance can further cause delays.
+
+Once blockchain data state sync is complete and `eth.syncing` returns false. You can expect to see block-specimens in the redis stream. The following logs are captured from `bsp-geth` service as the node begins to export live Block Specimens.
+
+```bash
+INFO [04-11|16:35:48.554|core/chain_replication.go:317]             Replication progress                     sessID=1 queued=1 sent=10960 last=0xffc46213ccd3c55b75f73a0bc29c25780eb37f04c9f2b88179e9d0fb889a4151
+INFO [04-11|16:36:04.183|core/blockchain_insert.go:75]              Imported new chain segment               blocks=1       txs=63         mgas=13.147  elapsed=252.747ms    mgasps=52.015   number=10,486,732 hash=8b57c8..bd5c79 dirty=255.49MiB
+INFO [04-11|16:36:04.189|core/block_replica.go:41]                  Creating Block Specimen                  Exported block=10,486,732 hash=0x8b57c8606d74972c59c56f7fe672a30ed6546fc8169b6a2504abb633aebd5c79
+INFO [04-11|16:36:04.189|core/rawdb/chain_iterator.go:338]          Unindexed transactions                   blocks=1       txs=9          tail=8,136,733 elapsed="369.12µs"
+```
+
+The last two lines above show that new block replicas containing the block specimens are being produced and streamed to the redis topic “replication”. After this you can check that redis is stacking up the bsp messages through the redis-cli with the command below (this should give you the number of messages from the stream)
 
 ```bash
 $ redis-cli
-127.0.0.1:6379>  XREAD COUNT 4 STREAMS replication 0-0
+127.0.0.1:6379>  xlen replication-1
+11696
 ```
 
-If it doesn’t - the BSP - producer isn't producing messages! In this case please look at the logs above and see if you have any WARN / DEBUG logs that can be responsible for the inoperation.
-
-For quick development iteration and faster network sync - enable a new node key to quickly re-sync with the ethereum network for development and testing by going to the root of go-ethereum and running the bootnode helper.
+If it doesn’t - the BSP - producer isn't producing messages! In this case please look at the logs above and see if you have any WARN / DEBUG logs that can be responsible for the inoperation. For quick development iteration and faster network sync - enable a new node key to quickly re-sync with the ethereum network for development and testing by going to the root of go-ethereum and running the bootnode helper.
 
 NOTE: To use the bootnode binary execute `make all` in place of `make geth`, this creates all the additional helper binaries that `bsp-geth` ships with.
 
@@ -276,15 +315,23 @@ NOTE: To use the bootnode binary execute `make all` in place of `make geth`, thi
 ./build/bin/bootnode -genkey ~/.ethereum/bsp/geth/nodekey
 ```
 
-Further, also have [`bsp-agent`](https://github.com/covalenthq/bsp-agent) running alongside consuming messages from redis. You should see the occasional responses from `bsp-agent` service such as -
+Further, also have [`bsp-agent`](https://github.com/covalenthq/bsp-agent) running alongside consuming messages from redis (this will consume the messages and remove them from the stream key). You should see the occasional responses from `bsp-agent` service such as -
 
 ```bash
-bsp-agent          | ---> Processing 1-61-70-replica-segment <---
-bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Submitting block-replica segment proof for: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=57
-bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="Proof-chain tx hash: 0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711 for block-replica segment: 1-61-70-replica-segment" function=EncodeProveAndUploadReplicaSegment line=63
-bsp-agent          | time="2022-02-04T19:00:04Z" level=info msg="File written successfully to: ./bin/block-ethereum/1-61-70-replica-segment-0x85b5e7cfa946f3b44b811dce48715841f40627dffb11ebcecb77e3e4a8ef3711" function=writeToBinFile line=88
-bsp-agent          |
-bsp-agent          | ---> Processing 1-71-80-replica-segment <---
+time="2022-04-18T17:26:47Z" level=info msg="Initializing Consumer: fb78bb1c-1e14-4905-bb1f-0ea96de8d8b5 | Redis Stream: replication-1 | Consumer Group: replicate-1" function=main line=167
+time="2022-04-18T17:26:47Z" level=info msg="block-specimen not created for: 10430548, base block number divisor is :3" function=processStream line=332
+time="2022-04-18T17:26:47Z" level=info msg="stream ids acked and trimmed: [1648848491276-0], for stream key: replication-1, with current length: 11700" function=processStream line=339
+time="2022-04-18T17:26:47Z" level=info msg="block-specimen not created for: 10430549, base block number divisor is :3" function=processStream line=332
+time="2022-04-18T17:26:47Z" level=info msg="stream ids acked and trimmed: [1648848505274-0], for stream key: replication-1, with current length: 11699" function=processStream line=339
+
+---> Processing 4-10430550-replica <---
+time="2022-04-18T17:26:47Z" level=info msg="Submitting block-replica segment proof for: 4-10430550-replica" function=EncodeProveAndUploadReplicaSegment line=59
+time="2022-04-18T17:26:47Z" level=info msg="binary file should be available: ipfs://QmUQ4XYJv9syrokUfUbhvA4bV8ce7w1Q2dF6NoNDfSDqxc" function=EncodeProveAndUploadReplicaSegment line=80
+time="2022-04-18T17:27:04Z" level=info msg="Proof-chain tx hash: 0xcc8c487a5db0fec423de62f7ac4ca81c630544aa67c432131cabfa35d9703f37 for block-replica segment: 4-10430550-replica" function=EncodeProveAndUploadReplicaSegment line=86
+time="2022-04-18T17:27:04Z" level=info msg="File written successfully to: /scratch/node/block-ethereum/4-10430550-replica-0xcc8c487a5db0fec423de62f7ac4ca81c630544aa67c432131cabfa35d9703f37" function=writeToBinFile line=188
+time="2022-04-18T17:27:04Z" level=info msg="car file location: /tmp/28077399.car\n" function=generateCarFile line=133
+time="2022-04-18T17:27:08Z" level=info msg="File /tmp/28077399.car successfully uploaded to IPFS with pin: QmUQ4XYJv9syrokUfUbhvA4bV8ce7w1Q2dF6NoNDfSDqxc" function=HandleObjectUploadToIPFS line=102
+time="2022-04-18T17:27:08Z" level=info msg="stream ids acked and trimmed: [1648848521276-0], for stream key: replication-1, with current length: 11698" function=processStream line=323
 ```
 
 If you see all of the above you're successfully running the full BSP pipeline.
@@ -299,9 +346,9 @@ If you see all of the above you're successfully running the full BSP pipeline.
 
 `--log.debug` - enables a detailed log of the processes geth deals with going back and forth between
 
-`--syncmode full` - this flag is used to enable different syncing strategies for geth and a fully sync allows us to execute every block from block 0
+`--syncmode` - this flag is used to enable different syncing strategies for geth and `full` and `snap` modes are supported for live block-specimen creation
 
-`--datadir` - specifies a local datadir path for geth (note we use “BSP” as the directory name with the Ethereum directory), this way we don’t overwrite or touch other previously synced geth libraries across other chains
+`--datadir` - specifies a local datadir path for geth (note we use “BSP” as the directory name with the Ethereum directory), this can be an pre-exisiting directory with chaindata for the given network flag synced to the most recent block.
 
 `--replication.targets` - this flag lets the BSP know where and how to send the BSP messages (this flag will not function without the usage of either one or both of the flags below, if both are selected a full block-replica is exported
 
@@ -311,6 +358,7 @@ If you see all of the above you're successfully running the full BSP pipeline.
 
 If both `--replica-result` & `--replica-specimen` are selected then a `block-replica` is exported containing all the fields for exporting any block fully alongwith its stored state.
 
+`--log-folder` - specifies the location (folder) where the log files have to be placed. In case of error (like permission errors), the logs are not recorded in files.
 
 ## <span id="geth">Go Ethereum</span>
 

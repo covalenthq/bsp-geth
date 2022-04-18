@@ -54,7 +54,7 @@ Contributing to this repo can mean many things such as participating in discussi
     6. When the code is complete it can be marked `Ready for Review`.
     7. Be sure to include a relevant change log entry in the `Unreleased` section of `CHANGELOG.md` (see file for log
        format).
-    8. Please make sure to run `gofmt` before every commit - the easiest way to do this is having your editor run it for you upon saving a file. Additionally, please ensure that your code is lint compliant by running `make lint` . There are CI tests built into the Evmos repository and all PR’s will require that these tests pass before they are able to be merged.
+    8. Please make sure to run `gofmt` before every commit - the easiest way to do this is having your editor run it for you upon saving a file. Additionally, please ensure that your code is lint compliant by running `make lint` . There are CI tests built into the bsp-geth repository and all PR’s will require that these tests pass before they are able to be merged.
 
 **Note**: for very small or blatantly obvious problems (such as typos), it is not required to open an issue to submit a
 PR, but be aware that for more complex problems/features, if a PR is opened before an adequate design discussion has
@@ -72,16 +72,21 @@ some [good first issues](https://github.com/covalenthq/bsp-geth/issues).
 4. Create your feature branch from `main` either on `github.com/covalenthq/bsp-geth`, or your fork (
    using `git remote add origin`).
 5. Before submitting a pull request, begin `git rebase` on top of `main`.
+6. Code must adhere to the official Go [formatting](https://golang.org/doc/effective_go.html#formatting)
+   guidelines (i.e. uses [gofmt](https://golang.org/cmd/gofmt/)).
+7. Code must be documented adhering to the official Go [commentary](https://golang.org/doc/effective_go.html#commentary)
+   guidelines.
+8. Pull requests need to be based on and opened against the `main` branch.
+9. Commit messages should be prefixed with the package(s) they modify.
+   * E.g. "eth, rpc: make trace configs optional"
 
 
 ### <span id="dependencies">Dependencies</span>
 
 We use [Go Modules](https://github.com/golang/go/wiki/Modules) to manage dependency versions.
 
-The master branch of every Cosmos repository should just build with `go get`, which means they should be kept up-to-date
-with their dependencies, so we can get away with telling people they can just `go get` our software.
-
-Since some dependencies are not under our control, a third party may break our build, in which case we can fall back
+The main branch of every bsp-geth repository should just build with `go get`, which means they should be kept up-to-date
+with their dependencies, so we can get away with telling people they can just `go get` our software. Since some dependencies are not under our control, a third party may break our build, in which case we can fall back
 on `go mod tidy -v`.
 
 ### <span id="testing">Testing</span>
@@ -94,7 +99,7 @@ User-facing repos should adhere to the [trunk based development branching model]
 
 Libraries need not follow the model strictly, but would be wise to.
 
-Evmos utilizes [semantic versioning](https://semver.org/).
+bsp-geth utilizes [semantic versioning](https://semver.org/).
 
 ### <span id="pr_targeting">PR Targeting</span>
 
@@ -111,7 +116,7 @@ bug fixes/feature-additions.
 
 ### <span id="reviewing_prs">Process for reviewing PRs</span>
 
-All PRs require two Reviews before merge. When reviewing PRs, please use the following review explanations:
+All PRs require at least 1 Review before merge. When reviewing PRs, please use the following review explanations:
 
 1. `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests
    locally and thoroughly reviewed it.
