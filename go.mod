@@ -4,13 +4,12 @@ go 1.15
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v0.3.0
-	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0
 	github.com/aws/aws-sdk-go-v2 v1.2.0
 	github.com/aws/aws-sdk-go-v2/config v1.1.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.1.1
-	github.com/btcsuite/btcd/btcec/v2 v2.1.2
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0
 	github.com/cespare/cp v0.1.0
 	github.com/cloudflare/cloudflare-go v0.36.0
 	github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f
@@ -55,19 +54,18 @@ require (
 	github.com/rjeczalik/notify v0.9.1
 	github.com/rs/cors v1.8.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4
 	github.com/stretchr/testify v1.7.1
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
 	golang.org/x/text v0.3.7
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65
-	golang.org/x/tools v0.1.0
+	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
 	gopkg.in/olebedev/go-duktape.v3 v3.0.0-20200619000410-60c24ae608a6
