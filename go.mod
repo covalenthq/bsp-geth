@@ -4,11 +4,10 @@ go 1.15
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v0.3.0
-	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0
-	github.com/aws/aws-sdk-go-v2 v1.2.0
-	github.com/aws/aws-sdk-go-v2/config v1.1.1
-	github.com/aws/aws-sdk-go-v2/credentials v1.1.1
+	github.com/aws/aws-sdk-go-v2 v1.16.3
+	github.com/aws/aws-sdk-go-v2/config v1.15.4
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.1.1
 	github.com/btcsuite/btcd/btcec/v2 v2.1.2
 	github.com/cespare/cp v0.1.0
@@ -55,7 +54,6 @@ require (
 	github.com/rjeczalik/notify v0.9.1
 	github.com/rs/cors v1.8.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4
 	github.com/stretchr/testify v1.7.1
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
