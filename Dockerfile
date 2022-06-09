@@ -8,7 +8,7 @@ ARG USER=$USER
 # Build Geth in a stock Go builder container
 FROM golang:1.18-alpine as builder
 
-RUN apk add --no-cache gcc=10.3.1_git20211027-r0 musl-dev=1.2.2-r7 linux-headers=5.10.41-r0 git=2.34.2-r0
+RUN apk add --no-cache gcc=11.2.1_git20220219-r2 musl-dev=1.2.3-r0 linux-headers=5.16.7-r1 git=2.36.1-r0
 
 # Get dependencies - will also be cached if we won't change go.mod/go.sum
 COPY go.mod /go-ethereum/
