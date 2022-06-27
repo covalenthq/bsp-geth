@@ -1,4 +1,4 @@
-![banner](./docs/covalent.jpg)
+![bdanner](./docs/covalent.jpg)
 
 <div align="center">
   <a href="https://github.com/covalenthq/bsp-geth/releases/latest">
