@@ -42,13 +42,13 @@ func (s *BlockChainAPI) Multicall(ctx context.Context, commonCallArgs Transactio
 	callArgsBuf.MaxFeePerGas = (*hexutil.Big)(header.BaseFee)
 
 	for contractAddr, payloads := range contractsWithPayloads {
-		callArgsBuf.To = &contractAddr
+		callArgsBuf.To = &contractAddr // nolint: exportloopref
 
 		execResultsForContract := make([]*MulticallExecutionResult, 0, len(payloads))
 
 		for _, payload := range payloads {
 			// assign the correct values to args
-			callArgsBuf.Input = &payload
+			callArgsBuf.Input = &payload // nolint: exportloopref
 
 			// get a new Message to be used once
 			msg, err := callArgsBuf.ToMessage(globalGasCap, header.BaseFee)
