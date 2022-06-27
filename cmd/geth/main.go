@@ -457,7 +457,7 @@ func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend, isCon
 	}
 
 	// Kill bsp-geth if --syncmode flag is 'light'
-	if ctx.GlobalString(utils.BlockReplicationTargetsFlag.Name) != "" && ctx.GlobalString(utils.SyncModeFlag.Name) == "light" {
+	if ctx.String(utils.BlockReplicationTargetsFlag.Name) != "" && ctx.String(utils.SyncModeFlag.Name) == "light" {
 		utils.Fatalf("Block specimen production not supported for 'light' sync (only supported modes are 'snap' and 'full'")
 	}
 
