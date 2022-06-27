@@ -17,12 +17,11 @@
 package fdlimit
 
 import (
-	"fmt"
 	"testing"
 )
 
 // TestFileDescriptorLimits simply tests whether the file descriptor allowance
-// per this process can be retrieved.
+// per this process can be retriemisved.
 func TestFileDescriptorLimits(t *testing.T) {
 	target := 4096
 	hardlimit, err := Maximum()
@@ -30,7 +29,7 @@ func TestFileDescriptorLimits(t *testing.T) {
 		t.Fatal(err)
 	}
 	if hardlimit < target {
-		t.Skip(fmt.Sprintf("system limit is less than desired test target: %d < %d", hardlimit, target))
+		t.Skip("system limit is less than desired test target:", hardlimit, "<", target)
 	}
 
 	if limit, err := Current(); err != nil || limit <= 0 {

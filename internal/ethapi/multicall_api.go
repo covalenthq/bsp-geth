@@ -48,7 +48,7 @@ func (s *BlockChainAPI) Multicall(ctx context.Context, commonCallArgs Transactio
 
 		for _, payload := range payloads {
 			// assign the correct values to args
-			callArgsBuf.Input = &payload // nolint: exportloopref
+			callArgsBuf.Input = &payload // nolint: exportloopref,gosec
 
 			// get a new Message to be used once
 			msg, err := callArgsBuf.ToMessage(globalGasCap, header.BaseFee)
