@@ -10,13 +10,9 @@ FROM golang:1.18-alpine as builder
 
 RUN apk add --no-cache gcc=11.2.1_git20220219-r2 musl-dev=1.2.3-r0 linux-headers=5.16.7-r1 git=2.36.1-r0
 
-# Get dependencies - will also be cached if we won't change go.mod/go.sum
-COPY go.mod /go-ethereum/
-COPY go.sum /go-ethereum/
-RUN cd /go-ethereum && go mod download
-
-ADD . /go-ethereum
-RUN cd /go-ethereum && go run build/ci.go install ./cmd/geth
+COPY . /go-ethereum
+WORKDIR /go-ethereum
+RUN go run build/ci.go install ./cmd/geth
 
 # Pull Geth into a second stage deploy alpine container
 FROM alpine:3.15.0
