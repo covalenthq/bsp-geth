@@ -32,7 +32,6 @@ type ChainReplicator struct {
 	mode       uint32
 	modeLock   sync.Mutex
 	drain      chan struct{}
-	abort      chan struct{}
 	exitStatus chan error
 	ctx        context.Context
 	ctxCancel  func()

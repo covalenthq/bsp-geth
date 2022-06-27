@@ -16,125 +16,125 @@
 
 package utils
 
-import (
-	"encoding"
-	"errors"
-	"flag"
-	"math/big"
-	"strings"
+// import (
+// 	"encoding"
+// 	"errors"
+// 	"flag"
+// 	"math/big"
+// 	"strings"
 
-	"github.com/ethereum/go-ethereum/common/math"
-	"gopkg.in/urfave/cli.v1"
-)
+// 	"github.com/ethereum/go-ethereum/common/math"
+// 	"gopkg.in/urfave/cli.v1"
+// )
 
-func eachName(longName string, fn func(string)) {
-	parts := strings.Split(longName, ",")
-	for _, name := range parts {
-		name = strings.Trim(name, " ")
-		fn(name)
-	}
-}
+// func eachName(longName string, fn func(string)) {
+// 	parts := strings.Split(longName, ",")
+// 	for _, name := range parts {
+// 		name = strings.Trim(name, " ")
+// 		fn(name)
+// 	}
+// }
 
-type TextMarshaler interface {
-	encoding.TextMarshaler
-	encoding.TextUnmarshaler
-}
+// type TextMarshaler interface {
+// 	encoding.TextMarshaler
+// 	encoding.TextUnmarshaler
+// }
 
-// textMarshalerVal turns a TextMarshaler into a flag.Value
-type textMarshalerVal struct {
-	v TextMarshaler
-}
+// // textMarshalerVal turns a TextMarshaler into a flag.Value
+// type textMarshalerVal struct {
+// 	v TextMarshaler
+// }
 
-func (v textMarshalerVal) String() string {
-	if v.v == nil {
-		return ""
-	}
-	text, _ := v.v.MarshalText()
-	return string(text)
-}
+// func (v textMarshalerVal) String() string {
+// 	if v.v == nil {
+// 		return ""
+// 	}
+// 	text, _ := v.v.MarshalText()
+// 	return string(text)
+// }
 
-func (v textMarshalerVal) Set(s string) error {
-	return v.v.UnmarshalText([]byte(s))
-}
+// func (v textMarshalerVal) Set(s string) error {
+// 	return v.v.UnmarshalText([]byte(s))
+// }
 
-// TextMarshalerFlag wraps a TextMarshaler value.
-type TextMarshalerFlag struct {
-	Name   string
-	Value  TextMarshaler
-	Usage  string
-	EnvVar string
-}
+// // TextMarshalerFlag wraps a TextMarshaler value.
+// type TextMarshalerFlag struct {
+// 	Name   string
+// 	Value  TextMarshaler
+// 	Usage  string
+// 	EnvVar string
+// }
 
-func (f TextMarshalerFlag) GetName() string {
-	return f.Name
-}
+// func (f TextMarshalerFlag) GetName() string {
+// 	return f.Name
+// }
 
-func (f TextMarshalerFlag) String() string {
-	return cli.FlagStringer(f)
-}
+// func (f TextMarshalerFlag) String() string {
+// 	return cli.FlagStringer(f)
+// }
 
-func (f TextMarshalerFlag) Apply(set *flag.FlagSet) {
-	eachName(f.Name, func(name string) {
-		set.Var(textMarshalerVal{f.Value}, f.Name, f.Usage)
-	})
-}
+// func (f TextMarshalerFlag) Apply(set *flag.FlagSet) {
+// 	eachName(f.Name, func(name string) {
+// 		set.Var(textMarshalerVal{f.Value}, f.Name, f.Usage)
+// 	})
+// }
 
-// GlobalTextMarshaler returns the value of a TextMarshalerFlag from the global flag set.
-func GlobalTextMarshaler(ctx *cli.Context, name string) TextMarshaler {
-	val := ctx.GlobalGeneric(name)
-	if val == nil {
-		return nil
-	}
-	return val.(textMarshalerVal).v
-}
+// // GlobalTextMarshaler returns the value of a TextMarshalerFlag from the global flag set.
+// func GlobalTextMarshaler(ctx *cli.Context, name string) TextMarshaler {
+// 	val := ctx.GlobalGeneric(name)
+// 	if val == nil {
+// 		return nil
+// 	}
+// 	return val.(textMarshalerVal).v
+// }
 
-// BigFlag is a command line flag that accepts 256 bit big integers in decimal or
-// hexadecimal syntax.
-type BigFlag struct {
-	Name   string
-	Value  *big.Int
-	Usage  string
-	EnvVar string
-}
+// // BigFlag is a command line flag that accepts 256 bit big integers in decimal or
+// // hexadecimal syntax.
+// type BigFlag struct {
+// 	Name   string
+// 	Value  *big.Int
+// 	Usage  string
+// 	EnvVar string
+// }
 
-// bigValue turns *big.Int into a flag.Value
-type bigValue big.Int
+// // bigValue turns *big.Int into a flag.Value
+// type bigValue big.Int
 
-func (b *bigValue) String() string {
-	if b == nil {
-		return ""
-	}
-	return (*big.Int)(b).String()
-}
+// func (b *bigValue) String() string {
+// 	if b == nil {
+// 		return ""
+// 	}
+// 	return (*big.Int)(b).String()
+// }
 
-func (b *bigValue) Set(s string) error {
-	int, ok := math.ParseBig256(s)
-	if !ok {
-		return errors.New("invalid integer syntax")
-	}
-	*b = (bigValue)(*int)
-	return nil
-}
+// func (b *bigValue) Set(s string) error {
+// 	int, ok := math.ParseBig256(s)
+// 	if !ok {
+// 		return errors.New("invalid integer syntax")
+// 	}
+// 	*b = (bigValue)(*int)
+// 	return nil
+// }
 
-func (f BigFlag) GetName() string {
-	return f.Name
-}
+// func (f BigFlag) GetName() string {
+// 	return f.Name
+// }
 
-func (f BigFlag) String() string {
-	return cli.FlagStringer(f)
-}
+// func (f BigFlag) String() string {
+// 	return cli.FlagStringer(f)
+// }
 
-func (f BigFlag) Apply(set *flag.FlagSet) {
-	eachName(f.Name, func(name string) {
-		set.Var((*bigValue)(f.Value), f.Name, f.Usage)
-	})
-}
+// func (f BigFlag) Apply(set *flag.FlagSet) {
+// 	eachName(f.Name, func(name string) {
+// 		set.Var((*bigValue)(f.Value), f.Name, f.Usage)
+// 	})
+// }
 
-// GlobalBig returns the value of a BigFlag from the global flag set.
-func GlobalBig(ctx *cli.Context, name string) *big.Int {
-	val := ctx.GlobalGeneric(name)
-	if val == nil {
-		return nil
-	}
-	return (*big.Int)(val.(*bigValue))
-}
+// // GlobalBig returns the value of a BigFlag from the global flag set.
+// func GlobalBig(ctx *cli.Context, name string) *big.Int {
+// 	val := ctx.GlobalGeneric(name)
+// 	if val == nil {
+// 		return nil
+// 	}
+// 	return (*big.Int)(val.(*bigValue))
+// }
