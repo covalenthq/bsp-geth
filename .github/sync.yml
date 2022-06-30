@@ -1,0 +1,15 @@
+name: Rebase Upstream
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - uses: imba-tjd/rebase-upstream-action@master
+      with:  # all args are optional
+        upstream: ethereum/go-ethereum
+        branch:   master
