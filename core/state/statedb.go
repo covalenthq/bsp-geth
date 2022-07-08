@@ -1067,12 +1067,16 @@ func (s *StateDB) SlotInAccessList(addr common.Address, slot common.Hash) (addre
 	return s.accessList.Contains(addr, slot)
 }
 
-func (stateDb *StateDB) EnableStateSpecimenTracking() {
-	stateDb.stateSpecimen = types.NewStateSpecimen()
+func (s *StateDB) EnableStateSpecimenTracking() {
+	s.stateSpecimen = types.NewStateSpecimen()
 }
 
-func (stateDb *StateDB) TakeStateSpecimen() *types.StateSpecimen {
-	sp := stateDb.stateSpecimen
-	stateDb.stateSpecimen = nil
+func (s *StateDB) TakeStateSpecimen() *types.StateSpecimen {
+	sp := s.stateSpecimen
+	s.stateSpecimen = nil
 	return sp
+}
+
+func (s *StateDB) GetStateSpecimen() *types.StateSpecimen {
+	return s.stateSpecimen
 }
