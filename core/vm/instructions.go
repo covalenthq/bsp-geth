@@ -454,7 +454,9 @@ func opBlockhash(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) (
 		num.Clear()
 		blockH = common.EmptyHash
 	}
-	_ = interpreter.evm.StateDB.GetStateSpecimen().LogBlockhashRead(num64, blockH)
+	if specimen := interpreter.evm.StateDB.GetStateSpecimen(); specimen != nil {
+		specimen.LogBlockhashRead(num64, blockH)
+	}
 	return nil, nil
 }
 
