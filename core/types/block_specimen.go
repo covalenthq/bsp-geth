@@ -33,8 +33,8 @@ type codeRead struct {
 }
 
 type blockhashRead struct {
-	BlockN    uint64
-	BlockHash common.Hash
+	BlockNumber uint64
+	BlockHash   common.Hash
 }
 
 func NewStateSpecimen() *StateSpecimen {
@@ -96,8 +96,8 @@ func (sp *StateSpecimen) LogBlockhashRead(blockN uint64, blockHash common.Hash) 
 	log.Trace("Retrieved BlockHash", "block_number", blockN, "hash", blockHash)
 
 	sp.BlockhashRead = append(sp.BlockhashRead, &blockhashRead{
-		BlockN:    blockN,
-		BlockHash: blockHash,
+		BlockNumber: blockN,
+		BlockHash:   blockHash,
 	})
 
 	return sp
