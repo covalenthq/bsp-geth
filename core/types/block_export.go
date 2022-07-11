@@ -45,9 +45,14 @@ type ReceiptExportRLP struct {
 type TransactionForExport Transaction
 
 type TransactionExportRLP struct {
+	Type         byte            `json:"type"`
+	AccessList   AccessList      `json:"accessList"`
+	ChainId      *big.Int        `json:"chainId"`
 	AccountNonce uint64          `json:"nonce"`
 	Price        *big.Int        `json:"gasPrice"`
 	GasLimit     uint64          `json:"gas"`
+	GasTipCap    *big.Int        `json:"gasTipCap"`
+	GasFeeCap    *big.Int        `json:"gasFeeCap"`
 	Sender       common.Address  `json:"from"`
 	Recipient    *common.Address `json:"to" rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"`
@@ -88,5 +93,10 @@ func (tx *TransactionForExport) ExportTx() *TransactionExportRLP {
 		Recipient:    txData.to(),
 		Amount:       txData.value(),
 		Payload:      txData.data(),
+		Type:         txData.txType(),
+		ChainId:      txData.chainID(),
+		AccessList:   txData.accessList(),
+		GasTipCap:    txData.gasTipCap(),
+		GasFeeCap:    txData.gasFeeCap(),
 	}
 }
