@@ -8,10 +8,11 @@ import (
 )
 
 type StateSpecimen struct {
-	AccountRead   []*accountRead
-	StorageRead   []*storageRead
-	CodeRead      []*codeRead
-	BlockhashRead []*blockhashRead
+	AccountRead      []*accountRead
+	StorageRead      []*storageRead
+	CodeRead         []*codeRead
+	BlockhashRead    []*blockhashRead
+	BlockhashReadMap map[uint64]common.Hash `json:"-"` // ignore in encoding/decoding
 }
 
 type accountRead struct {
@@ -38,17 +39,20 @@ type blockhashRead struct {
 }
 
 func NewStateSpecimen() *StateSpecimen {
-	sp := &StateSpecimen{}
+	sp := &StateSpecimen{
+		BlockhashReadMap: make(map[uint64]common.Hash),
+	}
 	return sp
 }
 
 func (sp *StateSpecimen) Copy() *StateSpecimen {
 
 	cpy := StateSpecimen{
-		AccountRead:   make([]*accountRead, 0),
-		StorageRead:   make([]*storageRead, 0),
-		CodeRead:      make([]*codeRead, 0),
-		BlockhashRead: make([]*blockhashRead, 0),
+		AccountRead:      make([]*accountRead, 0),
+		StorageRead:      make([]*storageRead, 0),
+		CodeRead:         make([]*codeRead, 0),
+		BlockhashRead:    make([]*blockhashRead, 0),
+		BlockhashReadMap: make(map[uint64]common.Hash),
 	}
 
 	return &cpy
@@ -95,10 +99,13 @@ func (sp *StateSpecimen) LogCodeRead(hashB []byte, code []byte) *StateSpecimen {
 func (sp *StateSpecimen) LogBlockhashRead(blockN uint64, blockHash common.Hash) *StateSpecimen {
 	log.Trace("Retrieved BlockHash", "block_number", blockN, "hash", blockHash)
 
-	sp.BlockhashRead = append(sp.BlockhashRead, &blockhashRead{
-		BlockNumber: blockN,
-		BlockHash:   blockHash,
-	})
+	if _, ok := sp.BlockhashReadMap[blockN]; !ok {
+		sp.BlockhashReadMap[blockN] = blockHash
+		sp.BlockhashRead = append(sp.BlockhashRead, &blockhashRead{
+			BlockNumber: blockN,
+			BlockHash:   blockHash,
+		})
+	}
 
 	return sp
 }

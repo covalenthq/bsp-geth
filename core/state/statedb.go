@@ -1073,6 +1073,7 @@ func (s *StateDB) EnableStateSpecimenTracking() {
 
 func (s *StateDB) TakeStateSpecimen() *types.StateSpecimen {
 	sp := s.stateSpecimen
+	sp.BlockhashReadMap = make(map[uint64]common.Hash)
 	s.stateSpecimen = nil
 	return sp
 }
