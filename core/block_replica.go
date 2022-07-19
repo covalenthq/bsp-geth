@@ -29,6 +29,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 	//encode to rlp
 	blockReplicaRLP, err := rlp.EncodeToBytes(exportBlockReplica)
 	if err != nil {
+		log.Error("error encoding block replica rlp", "error", err)
 		return err
 	}
 
@@ -124,7 +125,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Type:         "block-specimen",
 			NetworkId:    chainConfig.ChainID.Uint64(),
 			Hash:         bHash,
-			TotalDiff:    &big.Int{},
+			TotalDiff:    &big.Int{}, // TODO: this should be present in specimen as it cannot be derived by stateless exec
 			Header:       header,
 			Transactions: txsRlp,
 			Uncles:       uncles,
