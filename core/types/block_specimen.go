@@ -12,7 +12,7 @@ type StateSpecimen struct {
 	StorageRead      []*storageRead
 	CodeRead         []*codeRead
 	BlockhashRead    []*blockhashRead
-	BlockhashReadMap map[uint64]common.Hash `json:"-"` // ignore in encoding/decoding
+	BlockhashReadMap map[uint64]common.Hash `json:"-" rlp:"-"` // ignore in encoding/decoding
 }
 
 type accountRead struct {
