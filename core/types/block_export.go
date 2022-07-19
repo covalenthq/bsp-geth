@@ -81,6 +81,10 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 	from, _ := Sender(signer, inner_tx)
 
 	txData := tx.inner
+	value, success := new(big.Int).SetString("21810676825935641000", 10)
+	if !success {
+		panic("failed!")
+	}
 
 	return &TransactionExportRLP{
 		AccountNonce: txData.nonce(),
@@ -88,7 +92,7 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 		GasLimit:     txData.gas(),
 		Sender:       from,
 		Recipient:    txData.to(),
-		Amount:       txData.value(),
+		Amount:       value,
 		Payload:      txData.data(),
 		Type:         txData.txType(),
 		ChainId:      txData.chainID(),

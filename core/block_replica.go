@@ -40,6 +40,12 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 		return nil
 	} else if atomic.LoadUint32(replicaConfig.HistoricalBlocksSynced) == 1 {
 		log.Info("Creating Block Specimen", "Exported block", block.NumberU64(), "hash", sHash)
+		logg := ""
+		for _, somethin := range exportBlockReplica.State.BlockhashRead {
+			logg = fmt.Sprintf("%s %s", logg, fmt.Sprint(somethin.BlockNumber))
+		}
+		logg = fmt.Sprintf("[ %s ]", logg)
+		log.Info("blockhashes are", "blockhashreads:", logg)
 		bc.blockReplicationFeed.Send(BlockReplicationEvent{
 			sHash,
 			blockReplicaRLP,

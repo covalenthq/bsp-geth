@@ -97,7 +97,7 @@ func (sp *StateSpecimen) LogCodeRead(hashB []byte, code []byte) *StateSpecimen {
 }
 
 func (sp *StateSpecimen) LogBlockhashRead(blockN uint64, blockHash common.Hash) *StateSpecimen {
-	log.Trace("Retrieved BlockHash", "block_number", blockN, "hash", blockHash)
+	log.Info("Retrieved BlockHash", "block_number", blockN, "hash", blockHash)
 
 	if _, ok := sp.BlockhashReadMap[blockN]; !ok {
 		sp.BlockhashReadMap[blockN] = blockHash
