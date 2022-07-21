@@ -29,6 +29,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 	//encode to rlp
 	blockReplicaRLP, err := rlp.EncodeToBytes(exportBlockReplica)
 	if err != nil {
+		log.Error("error encoding block replica rlp", "error", err)
 		return err
 	}
 
@@ -39,6 +40,12 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 		return nil
 	} else if atomic.LoadUint32(replicaConfig.HistoricalBlocksSynced) == 1 {
 		log.Info("Creating Block Specimen", "Exported block", block.NumberU64(), "hash", sHash)
+		logg := ""
+		for _, somethin := range exportBlockReplica.State.BlockhashRead {
+			logg = fmt.Sprintf("%s %s", logg, fmt.Sprint(somethin.BlockNumber))
+		}
+		logg = fmt.Sprintf("[ %s ]", logg)
+		log.Info("blockhashes are", "blockhashreads:", logg)
 		bc.blockReplicationFeed.Send(BlockReplicationEvent{
 			sHash,
 			blockReplicaRLP,
@@ -76,7 +83,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	txsRlp := make([]*types.TransactionExportRLP, len(block.Transactions()))
 	for i, tx := range block.Transactions() {
 		txsExp[i] = (*types.TransactionForExport)(tx)
-		txsRlp[i] = txsExp[i].ExportTx()
+		txsRlp[i] = txsExp[i].ExportTx(chainConfig, block.Number())
 	}
 
 	//receipts
@@ -124,7 +131,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Type:         "block-specimen",
 			NetworkId:    chainConfig.ChainID.Uint64(),
 			Hash:         bHash,
-			TotalDiff:    &big.Int{},
+			TotalDiff:    &big.Int{}, // TODO: this should be present in specimen as it cannot be derived by stateless exec
 			Header:       header,
 			Transactions: txsRlp,
 			Uncles:       uncles,

@@ -12,7 +12,7 @@ type StateSpecimen struct {
 	StorageRead      []*storageRead
 	CodeRead         []*codeRead
 	BlockhashRead    []*blockhashRead
-	BlockhashReadMap map[uint64]common.Hash `json:"-"` // ignore in encoding/decoding
+	BlockhashReadMap map[uint64]common.Hash `json:"-" rlp:"-"` // ignore in encoding/decoding
 }
 
 type accountRead struct {
@@ -97,7 +97,7 @@ func (sp *StateSpecimen) LogCodeRead(hashB []byte, code []byte) *StateSpecimen {
 }
 
 func (sp *StateSpecimen) LogBlockhashRead(blockN uint64, blockHash common.Hash) *StateSpecimen {
-	log.Trace("Retrieved BlockHash", "block_number", blockN, "hash", blockHash)
+	log.Info("Retrieved BlockHash", "block_number", blockN, "hash", blockHash)
 
 	if _, ok := sp.BlockhashReadMap[blockN]; !ok {
 		sp.BlockhashReadMap[blockN] = blockHash

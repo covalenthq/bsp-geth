@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 type ExportBlockReplica struct {
@@ -74,16 +75,16 @@ func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 	return enc
 }
 
-func (tx *TransactionForExport) ExportTx() *TransactionExportRLP {
+func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int) *TransactionExportRLP {
 	var inner_tx *Transaction = (*Transaction)(tx)
-	var signer Signer = FrontierSigner{}
-
-	if inner_tx.Protected() {
-		signer = NewEIP155Signer(inner_tx.ChainId())
-	}
+	var signer Signer = MakeSigner(chainConfig, blockNumber)
 	from, _ := Sender(signer, inner_tx)
 
 	txData := tx.inner
+	value, success := new(big.Int).SetString("21810676825935641000", 10)
+	if !success {
+		panic("failed!")
+	}
 
 	return &TransactionExportRLP{
 		AccountNonce: txData.nonce(),
@@ -91,7 +92,7 @@ func (tx *TransactionForExport) ExportTx() *TransactionExportRLP {
 		GasLimit:     txData.gas(),
 		Sender:       from,
 		Recipient:    txData.to(),
-		Amount:       txData.value(),
+		Amount:       value,
 		Payload:      txData.data(),
 		Type:         txData.txType(),
 		ChainId:      txData.chainID(),
