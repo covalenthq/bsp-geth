@@ -128,7 +128,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Type:         "block-specimen",
 			NetworkId:    chainConfig.ChainID.Uint64(),
 			Hash:         bHash,
-			TotalDiff:    &big.Int{}, // TODO: this should be present in specimen as it cannot be derived by stateless exec
+			TotalDiff:    td,
 			Header:       header,
 			Transactions: txsRlp,
 			Uncles:       uncles,
