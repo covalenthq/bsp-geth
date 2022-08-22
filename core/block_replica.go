@@ -29,6 +29,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 	//encode to rlp
 	blockReplicaRLP, err := rlp.EncodeToBytes(exportBlockReplica)
 	if err != nil {
+		log.Error("error encoding block replica rlp", "error", err)
 		return err
 	}
 
@@ -76,7 +77,10 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	txsRlp := make([]*types.TransactionExportRLP, len(block.Transactions()))
 	for i, tx := range block.Transactions() {
 		txsExp[i] = (*types.TransactionForExport)(tx)
-		txsRlp[i] = txsExp[i].ExportTx()
+		txsRlp[i] = txsExp[i].ExportTx(chainConfig, block.Number())
+		if !replicaConfig.EnableSpecimen {
+			txsRlp[i].V, txsRlp[i].R, txsRlp[i].S = nil, nil, nil
+		}
 	}
 
 	//receipts
@@ -124,7 +128,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Type:         "block-specimen",
 			NetworkId:    chainConfig.ChainID.Uint64(),
 			Hash:         bHash,
-			TotalDiff:    &big.Int{},
+			TotalDiff:    td,
 			Header:       header,
 			Transactions: txsRlp,
 			Uncles:       uncles,

@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 type ExportBlockReplica struct {
@@ -53,10 +54,13 @@ type TransactionExportRLP struct {
 	GasLimit     uint64          `json:"gas"`
 	GasTipCap    *big.Int        `json:"gasTipCap"`
 	GasFeeCap    *big.Int        `json:"gasFeeCap"`
-	Sender       common.Address  `json:"from"`
+	Sender       *common.Address `json:"from" rlp:"nil"`
 	Recipient    *common.Address `json:"to" rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"`
 	Payload      []byte          `json:"input"`
+	V            *big.Int        `json:"v" rlp:"nil"`
+	R            *big.Int        `json:"r" rlp:"nil"`
+	S            *big.Int        `json:"s" rlp:"nil"`
 }
 
 func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
@@ -74,13 +78,10 @@ func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 	return enc
 }
 
-func (tx *TransactionForExport) ExportTx() *TransactionExportRLP {
+func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int) *TransactionExportRLP {
 	var inner_tx *Transaction = (*Transaction)(tx)
-	var signer Signer = FrontierSigner{}
-
-	if inner_tx.Protected() {
-		signer = NewEIP155Signer(inner_tx.ChainId())
-	}
+	v, r, s := tx.inner.rawSignatureValues()
+	var signer Signer = MakeSigner(chainConfig, blockNumber)
 	from, _ := Sender(signer, inner_tx)
 
 	txData := tx.inner
@@ -89,7 +90,7 @@ func (tx *TransactionForExport) ExportTx() *TransactionExportRLP {
 		AccountNonce: txData.nonce(),
 		Price:        txData.gasPrice(),
 		GasLimit:     txData.gas(),
-		Sender:       from,
+		Sender:       &from,
 		Recipient:    txData.to(),
 		Amount:       txData.value(),
 		Payload:      txData.data(),
@@ -98,5 +99,8 @@ func (tx *TransactionForExport) ExportTx() *TransactionExportRLP {
 		AccessList:   txData.accessList(),
 		GasTipCap:    txData.gasTipCap(),
 		GasFeeCap:    txData.gasFeeCap(),
+		V:            v,
+		R:            r,
+		S:            s,
 	}
 }
