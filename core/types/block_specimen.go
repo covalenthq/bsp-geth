@@ -46,7 +46,6 @@ func NewStateSpecimen() *StateSpecimen {
 }
 
 func (sp *StateSpecimen) Copy() *StateSpecimen {
-
 	cpy := StateSpecimen{
 		AccountRead:      make([]*accountRead, 0),
 		StorageRead:      make([]*storageRead, 0),
