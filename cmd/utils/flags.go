@@ -44,6 +44,7 @@ import (
 	ethcatalyst "github.com/ethereum/go-ethereum/eth/catalyst"
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/eth/ethconfig"
+	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/eth/gasprice"
 	"github.com/ethereum/go-ethereum/eth/tracers"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -65,6 +66,7 @@ import (
 	"github.com/ethereum/go-ethereum/p2p/nat"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/rpc"
 	pcsclite "github.com/gballet/go-libpcsclite"
 	gopsutil "github.com/shirou/gopsutil/mem"
 	"github.com/urfave/cli/v2"
@@ -92,7 +94,7 @@ var (
 	}
 	AncientFlag = &flags.DirectoryFlag{
 		Name:     "datadir.ancient",
-		Usage:    "Data directory for ancient chain segments (default = inside chaindata)",
+		Usage:    "Root directory for ancient data (default = inside chaindata)",
 		Category: flags.EthCategory,
 	}
 	MinFreeDiskSpaceFlag = &flags.DirectoryFlag{
@@ -263,17 +265,16 @@ var (
 		Value:    2048,
 		Category: flags.EthCategory,
 	}
-	OverrideGrayGlacierFlag = &cli.Uint64Flag{
-		Name:     "override.grayglacier",
-		Usage:    "Manually specify Gray Glacier fork-block, overriding the bundled setting",
-		Category: flags.EthCategory,
-	}
 	OverrideTerminalTotalDifficulty = &flags.BigFlag{
 		Name:     "override.terminaltotaldifficulty",
 		Usage:    "Manually specify TerminalTotalDifficulty, overriding the bundled setting",
 		Category: flags.EthCategory,
 	}
-
+	OverrideTerminalTotalDifficultyPassed = &cli.BoolFlag{
+		Name:     "override.terminaltotaldifficultypassed",
+		Usage:    "Manually specify TerminalTotalDifficultyPassed, overriding the bundled setting",
+		Category: flags.EthCategory,
+	}
 	// Light server and client settings
 	LightServeFlag = &cli.IntFlag{
 		Name:     "light.serve",
@@ -492,6 +493,12 @@ var (
 		Name:     "cache.preimages",
 		Usage:    "Enable recording the SHA3/keccak preimages of trie keys",
 		Category: flags.PerfCategory,
+	}
+	CacheLogSizeFlag = &cli.IntFlag{
+		Name:     "cache.blocklogs",
+		Usage:    "Size (in number of blocks) of the log cache for filtering",
+		Category: flags.PerfCategory,
+		Value:    ethconfig.Defaults.FilterLogCacheSize,
 	}
 	FDLimitFlag = &cli.IntFlag{
 		Name:     "fdlimit",
@@ -849,6 +856,12 @@ var (
 		Usage:    "Sets DNS discovery entry points (use \"\" to disable DNS)",
 		Category: flags.NetworkingCategory,
 	}
+	DiscoveryPortFlag = &cli.IntFlag{
+		Name:     "discovery.port",
+		Usage:    "Use a custom UDP port for P2P discovery",
+		Value:    30303,
+		Category: flags.NetworkingCategory,
+	}
 
 	// Console
 	JSpathFlag = &flags.DirectoryFlag{
@@ -1002,15 +1015,6 @@ var (
 	}
 )
 
-// GroupFlags combines the given flag slices together and returns the merged one.
-func GroupFlags(groups ...[]cli.Flag) []cli.Flag {
-	var ret []cli.Flag
-	for _, group := range groups {
-		ret = append(ret, group...)
-	}
-	return ret
-}
-
 // MakeDataDir retrieves the currently requested data directory, terminating
 // if none (or the empty string) is specified. If the node is starting a testnet,
 // then a subdirectory of the specified datadir will be used.
@@ -1089,8 +1093,11 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 		urls = params.GoerliBootnodes
 	case ctx.Bool(KilnFlag.Name):
 		urls = params.KilnBootnodes
-	case cfg.BootstrapNodes != nil:
-		return // already set, don't apply defaults.
+	}
+
+	// don't apply defaults if BootstrapNodes is already set
+	if cfg.BootstrapNodes != nil {
+		return
 	}
 
 	cfg.BootstrapNodes = make([]*enode.Node, 0, len(urls))
@@ -1130,11 +1137,14 @@ func setBootstrapNodesV5(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 
-// setListenAddress creates a TCP listening address string from set command
-// line flags.
+// setListenAddress creates TCP/UDP listening address strings from set command
+// line flags
 func setListenAddress(ctx *cli.Context, cfg *p2p.Config) {
 	if ctx.IsSet(ListenPortFlag.Name) {
 		cfg.ListenAddr = fmt.Sprintf(":%d", ctx.Int(ListenPortFlag.Name))
+	}
+	if ctx.IsSet(DiscoveryPortFlag.Name) {
+		cfg.DiscAddr = fmt.Sprintf(":%d", ctx.Int(DiscoveryPortFlag.Name))
 	}
 }
 
@@ -1823,6 +1833,9 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	if ctx.IsSet(CacheFlag.Name) || ctx.IsSet(CacheSnapshotFlag.Name) {
 		cfg.SnapshotCache = ctx.Int(CacheFlag.Name) * ctx.Int(CacheSnapshotFlag.Name) / 100
 	}
+	if ctx.IsSet(CacheLogSizeFlag.Name) {
+		cfg.FilterLogCacheSize = ctx.Int(CacheLogSizeFlag.Name)
+	}
 	if !ctx.Bool(SnapshotFlag.Name) {
 		// If snap-sync is requested, this flag is also required
 		if cfg.SyncMode == downloader.SnapSync {
@@ -1998,10 +2011,8 @@ func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (ethapi.Backend
 			Fatalf("Failed to register the Ethereum service: %v", err)
 		}
 		stack.RegisterAPIs(tracers.APIs(backend.ApiBackend))
-		if backend.BlockChain().Config().TerminalTotalDifficulty != nil {
-			if err := lescatalyst.Register(stack, backend); err != nil {
-				Fatalf("Failed to register the catalyst service: %v", err)
-			}
+		if err := lescatalyst.Register(stack, backend); err != nil {
+			Fatalf("Failed to register the Engine API service: %v", err)
 		}
 		return backend.ApiBackend, nil
 	}
@@ -2015,28 +2026,39 @@ func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (ethapi.Backend
 			Fatalf("Failed to create the LES server: %v", err)
 		}
 	}
-	if backend.BlockChain().Config().TerminalTotalDifficulty != nil {
-		if err := ethcatalyst.Register(stack, backend); err != nil {
-			Fatalf("Failed to register the catalyst service: %v", err)
-		}
+	if err := ethcatalyst.Register(stack, backend); err != nil {
+		Fatalf("Failed to register the Engine API service: %v", err)
 	}
 	stack.RegisterAPIs(tracers.APIs(backend.APIBackend))
 	return backend.APIBackend, backend
 }
 
-// RegisterEthStatsService configures the Ethereum Stats daemon and adds it to
-// the given node.
+// RegisterEthStatsService configures the Ethereum Stats daemon and adds it to the node.
 func RegisterEthStatsService(stack *node.Node, backend ethapi.Backend, url string) {
 	if err := ethstats.New(stack, backend, backend.Engine(), url); err != nil {
 		Fatalf("Failed to register the Ethereum Stats service: %v", err)
 	}
 }
 
-// RegisterGraphQLService is a utility function to construct a new service and register it against a node.
-func RegisterGraphQLService(stack *node.Node, backend ethapi.Backend, cfg node.Config) {
-	if err := graphql.New(stack, backend, cfg.GraphQLCors, cfg.GraphQLVirtualHosts); err != nil {
+// RegisterGraphQLService adds the GraphQL API to the node.
+func RegisterGraphQLService(stack *node.Node, backend ethapi.Backend, filterSystem *filters.FilterSystem, cfg *node.Config) {
+	err := graphql.New(stack, backend, filterSystem, cfg.GraphQLCors, cfg.GraphQLVirtualHosts)
+	if err != nil {
 		Fatalf("Failed to register the GraphQL service: %v", err)
 	}
+}
+
+// RegisterFilterAPI adds the eth log filtering RPC API to the node.
+func RegisterFilterAPI(stack *node.Node, backend ethapi.Backend, ethcfg *ethconfig.Config) *filters.FilterSystem {
+	isLightClient := ethcfg.SyncMode == downloader.LightSync
+	filterSystem := filters.NewFilterSystem(backend, filters.Config{
+		LogCacheSize: ethcfg.FilterLogCacheSize,
+	})
+	stack.RegisterAPIs([]rpc.API{{
+		Namespace: "eth",
+		Service:   filters.NewFilterAPI(filterSystem, isLightClient),
+	}})
+	return filterSystem
 }
 
 func SetupMetrics(ctx *cli.Context) {

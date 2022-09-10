@@ -12,7 +12,7 @@ RUN apk add --no-cache gcc=11.2.1_git20220219-r2 musl-dev=1.2.3-r0 linux-headers
 
 COPY . /go-ethereum
 WORKDIR /go-ethereum
-RUN go run build/ci.go install ./cmd/geth
+RUN go run build/ci.go install -static ./cmd/geth
 
 # Pull Geth into a second stage deploy alpine container
 FROM alpine:3.15.0

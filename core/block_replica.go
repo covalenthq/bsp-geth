@@ -48,11 +48,9 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 	} else {
 		return fmt.Errorf("error in setting atomic config historical block sync: %v", replicaConfig.HistoricalBlocksSynced)
 	}
-
 }
 
 func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.ExportBlockReplica, error) {
-
 	bHash := block.Hash()
 	bNum := block.NumberU64()
 
