@@ -466,7 +466,9 @@ func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend, isCon
 	// Spawn a standalone goroutine for status synchronization monitoring,
 	// if full sync is completed in block specimen creation mode set replica config flag
 	if ctx.Bool(utils.ReplicaEnableSpecimenFlag.Name) || ctx.Bool(utils.ReplicaEnableResultFlag.Name) {
-		log.Info("Synchronisation started, historical blocks synced set to 0")
+		//log.Info("Synchronisation started, historical blocks synced set to 0")
+		backend.SetHistoricalBlocksSynced()
+
 		go func() {
 			sub := stack.EventMux().Subscribe(downloader.DoneEvent{})
 			defer sub.Unsubscribe()
