@@ -1747,6 +1747,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		stats.report(chain, it.index, dirty, setHead)
 
 		if !setHead {
+			// Export Block Specimen
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 			return it.index, nil // Direct block insertion of a single block
 		}
 		switch status {
