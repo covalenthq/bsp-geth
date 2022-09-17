@@ -27,9 +27,20 @@ const (
 	VersionMeta  = "stable" // Version metadata to append to the version string
 )
 
+const (
+	BspVersionMajor = 1 // Major version component of the current release
+	BspVersionMinor = 3 // Minor version component of the current release
+	BspVersionPatch = 1 // Patch version component of the current release
+)
+
 // Version holds the textual version string.
 var Version = func() string {
 	return fmt.Sprintf("%d.%d.%d", VersionMajor, VersionMinor, VersionPatch)
+}()
+
+// BspVersion holds the textual version string.
+var BspVersion = func() string {
+	return fmt.Sprintf("%d.%d.%d-%v", BspVersionMajor, BspVersionMinor, BspVersionPatch, "bsp")
 }()
 
 // VersionWithMeta holds the textual version string including the metadata.

@@ -21,7 +21,6 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
@@ -128,8 +127,9 @@ func makedag(ctx *cli.Context) error {
 }
 
 func version(ctx *cli.Context) error {
-	fmt.Println(strings.Title(clientIdentifier)) //nolint: typecheck, staticcheck
-	fmt.Println("Version:", params.VersionWithMeta)
+	fmt.Println(clientIdentifier) //nolint: typecheck, staticcheck
+	fmt.Println("Geth Version:", params.VersionWithMeta)
+	fmt.Println("Bsp Version:", params.BspVersion)
 	if gitCommit != "" {
 		fmt.Println("Git Commit:", gitCommit)
 	}
