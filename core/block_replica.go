@@ -131,7 +131,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Transactions: txsRlp,
 			Uncles:       uncles,
 			Receipts:     []*types.ReceiptExportRLP{},
-			Senders:      []common.Address{},
+			Senders:      senders,
 			State:        stateSpecimen,
 		}
 		log.Debug("Exporting block-specimen only")
