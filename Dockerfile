@@ -8,7 +8,7 @@ ARG USER=$USER
 # Build Geth in a stock Go builder container
 FROM golang:1.18-alpine as builder
 
-RUN apk add --no-cache gcc=11.2.1_git20220219-r2 musl-dev=1.2.3-r0 linux-headers=5.16.7-r1 git=2.36.3-r0
+RUN apk add --no-cache gcc=11.2.1_git20220219-r2 musl-dev=1.2.3-r2 linux-headers=5.16.7-r1 git=2.36.3-r0
 
 COPY . /go-ethereum
 WORKDIR /go-ethereum
