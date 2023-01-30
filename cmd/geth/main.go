@@ -48,7 +48,7 @@ import (
 )
 
 const (
-	clientIdentifier = "bspgeth" // Client identifier to advertise over the network
+	clientIdentifier = "geth" // Client identifier to advertise over the network
 )
 
 var (
