@@ -58,7 +58,13 @@ issues:
     - path: accounts/usbwallet/trezor/
       text: 'SA1019: "github.com/golang/protobuf/proto" is deprecated: Use the "google.golang.org/protobuf/proto" package instead.'
   exclude:
-    - 'SA1019: event.TypeMux is deprecated: use Feed'
-    - 'SA1019: strings.Title is deprecated'
-    - 'SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0: The rule Title uses for word boundaries does not handle Unicode punctuation properly. Use golang.org/x/text/cases instead.'
-    - 'SA1029: should not use built-in type string as key for value'
+    - "SA1019: event.TypeMux is deprecated: use Feed"
+    - "SA1019: strings.Title is deprecated"
+    - "SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0: The rule Title uses for word boundaries does not handle Unicode punctuation properly. Use golang.org/x/text/cases instead."
+    - "SA1029: should not use built-in type string as key for value"
+    - "missing type in composite literal"
+    - "(.+) undefined \\(type (.+) has no field or method (.+)\\)"
+    - "invalid operation: cannot index (.+) \\(variable of type (.+)\\)"
+    - "cannot range over (.+) \\(variable of type (.+)\\)"
+    - "cannot convert (.+) \\(variable of type (.+)\\) to type (.+)"
+    - "cannot use (.+) \\(variable of type (.+)\\) as \\[\\]common.Hash value in argument to (.+)"

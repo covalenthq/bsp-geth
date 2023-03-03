@@ -265,24 +265,20 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, genesis *Genesis
 	log.Info("")
 
 	bc := &BlockChain{
-<<<<<<< HEAD
-		chainConfig: chainConfig,
-		cacheConfig: cacheConfig,
-		db:          db,
-		triegc:      prque.New(nil),
-		stateCache: state.NewDatabaseWithConfig(db, &trie.Config{
-			Cache:     cacheConfig.TrieCleanLimit,
-			Journal:   cacheConfig.TrieCleanJournal,
-			Preimages: cacheConfig.Preimages,
-		}),
+		chainConfig:          chainConfig,
+		cacheConfig:          cacheConfig,
+		db:                   db,
+		triedb:               triedb,
+		flushInterval:        int64(cacheConfig.TrieTimeLimit),
+		triegc:               prque.New[int64, common.Hash](nil),
 		quit:                 make(chan struct{}),
 		chainmu:              syncx.NewClosableMutex(),
-		bodyCache:            bodyCache,
-		bodyRLPCache:         bodyRLPCache,
-		receiptsCache:        receiptsCache,
-		blockCache:           blockCache,
-		txLookupCache:        txLookupCache,
-		futureBlocks:         futureBlocks,
+		bodyCache:            lru.NewCache[common.Hash, *types.Body](bodyCacheLimit),
+		bodyRLPCache:         lru.NewCache[common.Hash, rlp.RawValue](bodyCacheLimit),
+		receiptsCache:        lru.NewCache[common.Hash, []*types.Receipt](receiptsCacheLimit),
+		blockCache:           lru.NewCache[common.Hash, *types.Block](blockCacheLimit),
+		txLookupCache:        lru.NewCache[common.Hash, *rawdb.LegacyTxLookupEntry](txLookupCacheLimit),
+		futureBlocks:         lru.NewCache[common.Hash, *types.Block](maxFutureBlocks),
 		engine:               engine,
 		vmConfig:             vmConfig,
 		blockReplicationFeed: event.Feed{},
@@ -291,24 +287,6 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, genesis *Genesis
 			EnableResult:           false,
 			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
 		},
-=======
-		chainConfig:   chainConfig,
-		cacheConfig:   cacheConfig,
-		db:            db,
-		triedb:        triedb,
-		flushInterval: int64(cacheConfig.TrieTimeLimit),
-		triegc:        prque.New[int64, common.Hash](nil),
-		quit:          make(chan struct{}),
-		chainmu:       syncx.NewClosableMutex(),
-		bodyCache:     lru.NewCache[common.Hash, *types.Body](bodyCacheLimit),
-		bodyRLPCache:  lru.NewCache[common.Hash, rlp.RawValue](bodyCacheLimit),
-		receiptsCache: lru.NewCache[common.Hash, []*types.Receipt](receiptsCacheLimit),
-		blockCache:    lru.NewCache[common.Hash, *types.Block](blockCacheLimit),
-		txLookupCache: lru.NewCache[common.Hash, *rawdb.LegacyTxLookupEntry](txLookupCacheLimit),
-		futureBlocks:  lru.NewCache[common.Hash, *types.Block](maxFutureBlocks),
-		engine:        engine,
-		vmConfig:      vmConfig,
->>>>>>> v1.11.2
 	}
 	bc.forker = NewForkChoice(bc, shouldPreserve)
 	bc.stateCache = state.NewDatabaseWithNodeDB(bc.db, bc.triedb)

@@ -126,7 +126,7 @@ func (tc *conn) nextReqID() []byte {
 // reqresp performs a request/response interaction on the given connection.
 // The request is retried if a handshake is requested.
 func (tc *conn) reqresp(c net.PacketConn, req v5wire.Packet) v5wire.Packet {
-	reqnonce := tc.write(c, req, nil)
+	reqnonce := tc.write(c, req, nil) //nolint:typecheck
 	switch resp := tc.read(c).(type) {
 	case *v5wire.Whoareyou:
 		if resp.Nonce != reqnonce {

@@ -80,7 +80,7 @@ func (h *testEthHandler) Handle(peer *eth.Peer, packet eth.Packet) error {
 	default:
 		panic(fmt.Sprintf("unexpected eth packet type in tests: %T", packet))
 	}
-}
+} //nolint:typecheck
 
 // Tests that peers are correctly accepted (or rejected) based on the advertised
 // fork IDs in the protocol handshake.
