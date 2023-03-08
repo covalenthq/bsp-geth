@@ -12,7 +12,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0
 	github.com/cespare/cp v0.1.0
 	github.com/cloudflare/cloudflare-go v0.14.0
-	github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f
+	github.com/consensys/gnark-crypto v0.9.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v1.8.0
 	github.com/docker/docker v1.6.2
@@ -82,6 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.8 // indirect
 	github.com/aws/smithy-go v1.12.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
@@ -94,6 +95,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/mitchellh/pointerstructure v1.2.1 // indirect
+	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/naoina/go-stringutil v0.1.0 // indirect
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -108,4 +110,5 @@ require (
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	rsc.io/tmplfunc v0.0.3 // indirect
 )
