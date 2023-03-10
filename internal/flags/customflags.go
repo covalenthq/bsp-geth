@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"os"
 	"os/user"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common/math"
@@ -85,30 +85,6 @@ func (f *DirectoryFlag) GetDefaultText() string {
 		return f.DefaultText
 	}
 	return f.GetValue()
-}
-
-// Expands a file path
-// 1. replace tilde with users home dir
-// 2. expands embedded environment variables
-// 3. cleans the path, e.g. /a/b/../c -> /a/c
-// Note, it has limitations, e.g. ~someuser/tmp will not be expanded
-func expandPath(p string) string {
-	if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, "~\\") {
-		if home := HomeDir(); home != "" {
-			p = home + p[1:]
-		}
-	}
-	return path.Clean(os.ExpandEnv(p))
-}
-
-func HomeDir() string {
-	if home := os.Getenv("HOME"); home != "" {
-		return home
-	}
-	if usr, err := user.Current(); err == nil {
-		return usr.HomeDir
-	}
-	return ""
 }
 
 type TextMarshaler interface {
@@ -290,6 +266,34 @@ func GlobalBig(ctx *cli.Context, name string) *big.Int {
 		return nil
 	}
 	return (*big.Int)(val.(*bigValue))
+}
+
+// Expands a file path
+// 1. replace tilde with users home dir
+// 2. expands embedded environment variables
+// 3. cleans the path, e.g. /a/b/../c -> /a/c
+// Note, it has limitations, e.g. ~someuser/tmp will not be expanded
+func expandPath(p string) string {
+	// Named pipes are not file paths on windows, ignore
+	if strings.HasPrefix(p, `\\.\pipe`) {
+		return p
+	}
+	if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, "~\\") {
+		if home := HomeDir(); home != "" {
+			p = home + p[1:]
+		}
+	}
+	return filepath.Clean(os.ExpandEnv(p))
+}
+
+func HomeDir() string {
+	if home := os.Getenv("HOME"); home != "" {
+		return home
+	}
+	if usr, err := user.Current(); err == nil {
+		return usr.HomeDir
+	}
+	return ""
 }
 
 func eachName(f cli.Flag, fn func(string)) {
