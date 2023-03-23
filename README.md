@@ -77,7 +77,7 @@ Production of Block Specimens forms the core of the network’s data objects spe
 
 1. [BSP Agent](https://github.com/covalenthq/bsp-agent) - Operator run & deployed
 
-1. [BSP Proof-chain](https://github.com/covalenthq/cqt-virtnet) - Covalent operated & pre-deployed
+1. [BSP Proof-chain](https://github.com/covalenthq/bsp-staking) - Covalent operated & pre-deployed
 
 Please refer to these [instructions](https://docs.google.com/document/d/1N_HxUi6ZEkub9EHANe49vkL9iQztVA_ACyfHcOZV5y0/edit?usp=sharing) for running the BSP with the bsp-agent (BSP Agent).
 
