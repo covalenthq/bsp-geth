@@ -193,8 +193,8 @@ The docker image for this service can be found [here](https://github.com/covalen
 Run only go-ethereum-bsp with the following, though this will not work if the other services in the docker-compose.yml file aren't also initialized.
 
 ```bash
-docker pull ghcr.io/covalenthq/bsp-geth-bsp:latest
-docker run ghcr.io/covalenthq/bsp-geth-bsp:latest
+docker pull covalenthq/bsp-geth:latest
+docker run covalenthq/bsp-geth:latest
 ```
 
 ## <span id="build_run">Build & Run</span>

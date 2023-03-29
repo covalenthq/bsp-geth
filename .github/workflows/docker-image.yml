@@ -26,8 +26,8 @@ jobs:
     - name: Build & Publish the Docker image
       if: ${{ !env.ACT }}
       run: | 
-        docker build . --file Dockerfile --tag ghcr.io/covalenthq/bsp-geth:latest
-        docker push ghcr.io/covalenthq/bsp-geth:latest
+        docker build . --file Dockerfile --tag sudeepcovalenthq/bsp-geth:latest
+        docker push covalenthq/bsp-geth:latest
 
     # - name: Start containers
     #   run: docker-compose -f "docker-compose.yml" up --build --remove-orphans --force-recreate --exit-code-from agent

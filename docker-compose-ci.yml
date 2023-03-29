@@ -52,7 +52,7 @@ services:
       - "8545:8545"
 
   cqt-virtnet:
-    image: "ghcr.io/covalenthq/cqt-virtnet:latest"
+    image: "covalenthq/cqt-virtnet:latest"
     container_name: proof-chain
     restart:  on-failure
     expose:
