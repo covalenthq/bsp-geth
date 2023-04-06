@@ -103,6 +103,11 @@ var (
 			"The '.rlp' format is identical to the output.body format.",
 		Value: "txs.json",
 	}
+	InputReplicaFlag = &cli.StringFlag{
+		Name:  "input.replica",
+		Usage: "`stdin` or file name of where to find the block replica to apply (env, alloc, txs provided via other parameters are ignored).",
+		Value: "",
+	}
 	InputHeaderFlag = &cli.StringFlag{
 		Name:  "input.header",
 		Usage: "`stdin` or file name of where to find the block header to use.",
@@ -158,7 +163,7 @@ var (
 			"\n\tSyntax <forkname>(+ExtraEip)",
 			strings.Join(tests.AvailableForks(), "\n\t    "),
 			strings.Join(vm.ActivateableEips(), ", ")),
-		Value: "GrayGlacier",
+		Value: "Merge",
 	}
 	VerbosityFlag = &cli.IntFlag{
 		Name:  "verbosity",

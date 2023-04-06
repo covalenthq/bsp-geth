@@ -150,9 +150,12 @@ func Transition(ctx *cli.Context) error {
 		txs      types.Transactions // txs to apply
 		allocStr = ctx.String(InputAllocFlag.Name)
 
-		envStr    = ctx.String(InputEnvFlag.Name)
-		txStr     = ctx.String(InputTxsFlag.Name)
-		inputData = &input{}
+		envStr               = ctx.String(InputEnvFlag.Name)
+		txStr                = ctx.String(InputTxsFlag.Name)
+		blockReplicaStr      = ctx.String(InputReplicaFlag.Name)
+		inputReplica         = BlockReplica{}
+		replicaInputProvided = false
+		inputData            = &input{}
 	)
 	// Figure out the prestate alloc
 	if allocStr == stdinSelector || envStr == stdinSelector || txStr == stdinSelector {
@@ -161,20 +164,70 @@ func Transition(ctx *cli.Context) error {
 			return NewError(ErrorJson, fmt.Errorf("failed unmarshaling stdin: %v", err))
 		}
 	}
-	if allocStr != stdinSelector {
+
+	if len(blockReplicaStr) > 0 {
+		var decoder *json.Decoder
+		if blockReplicaStr == stdinSelector {
+			decoder = json.NewDecoder(os.Stdin)
+		} else {
+			inFile, err1 := os.Open(blockReplicaStr)
+			if err1 != nil {
+				return NewError(ErrorIO, fmt.Errorf("failed reading specimen file: %v", err1))
+			}
+			defer inFile.Close()
+			decoder = json.NewDecoder(inFile)
+		}
+
+		if err = decoder.Decode(&inputReplica); err != nil {
+			return NewError(ErrorJson, fmt.Errorf("error unmarshalling replica file: %v", err))
+		}
+
+		replicaInputProvided = true
+	}
+	if allocStr != stdinSelector && !replicaInputProvided {
 		if err := readFile(allocStr, "alloc", &inputData.Alloc); err != nil {
 			return err
 		}
+	} else if replicaInputProvided {
+		Alloc := make(map[common.Address]core.GenesisAccount)
+		Storage := make(map[common.Address]map[common.Hash]common.Hash)
+		Code := make(map[common.Hash][]byte)
+		var ok bool
+		for _, storageRead := range inputReplica.State.StorageRead {
+			if _, ok = Storage[storageRead.Account]; !ok {
+				Storage[storageRead.Account] = make(map[common.Hash]common.Hash)
+			}
+			Storage[storageRead.Account][storageRead.SlotKey] = storageRead.Value
+		}
+
+		for _, codeRead := range inputReplica.State.CodeRead {
+			Code[codeRead.Hash] = codeRead.Code
+		}
+
+		for _, accountRead := range inputReplica.State.AccountRead {
+			Alloc[accountRead.Address] = core.GenesisAccount{
+				Balance: accountRead.Balance.Int,
+				Storage: Storage[accountRead.Address],
+				Nonce:   accountRead.Nonce,
+				Code:    Code[accountRead.CodeHash],
+			}
+		}
+
+		inputData.Alloc = Alloc
 	}
+
 	prestate.Pre = inputData.Alloc
 
 	// Set the block environment
-	if envStr != stdinSelector {
+	if envStr != stdinSelector && !replicaInputProvided {
 		var env stEnv
 		if err := readFile(envStr, "env", &env); err != nil {
 			return err
 		}
 		inputData.Env = &env
+	} else if replicaInputProvided {
+		inputData.Env = &stEnv{}
+		inputData.Env.loadFromReplica(&inputReplica)
 	}
 	prestate.Env = *inputData.Env
 
@@ -193,8 +246,9 @@ func Transition(ctx *cli.Context) error {
 	// Set the chain id
 	chainConfig.ChainID = big.NewInt(ctx.Int64(ChainIDFlag.Name))
 
+	signer := types.MakeSigner(chainConfig, big.NewInt(int64(prestate.Env.Number)))
 	var txsWithKeys []*txWithKey
-	if txStr != stdinSelector {
+	if txStr != stdinSelector && !replicaInputProvided {
 		inFile, err := os.Open(txStr)
 		if err != nil {
 			return NewError(ErrorIO, fmt.Errorf("failed reading txs file: %v", err))
@@ -221,6 +275,16 @@ func Transition(ctx *cli.Context) error {
 				return NewError(ErrorJson, fmt.Errorf("failed unmarshaling txs-file: %v", err))
 			}
 		}
+	} else if replicaInputProvided {
+		for _, tx := range inputReplica.Transactions {
+			atx, err := tx.adaptTransaction(signer)
+			if err != nil {
+				panic(err)
+			}
+			txsWithKeys = append(txsWithKeys, &txWithKey{
+				tx: atx,
+			})
+		}
 	} else {
 		if len(inputData.TxRlp) > 0 {
 			// Decode the body of already signed transactions
@@ -241,7 +305,6 @@ func Transition(ctx *cli.Context) error {
 		}
 	}
 	// We may have to sign the transactions.
-	signer := types.MakeSigner(chainConfig, big.NewInt(int64(prestate.Env.Number)))
 
 	if txs, err = signUnsignedTransactions(txsWithKeys, signer); err != nil {
 		return NewError(ErrorJson, fmt.Errorf("failed signing transactions: %v", err))
@@ -268,6 +331,9 @@ func Transition(ctx *cli.Context) error {
 	isMerged := chainConfig.TerminalTotalDifficulty != nil && chainConfig.TerminalTotalDifficulty.BitLen() == 0
 	env := prestate.Env
 	if isMerged {
+		fmt.Println("it's merged!")
+		fmt.Println("env random", env.Random)
+		fmt.Println("env difficulty", env.Difficulty)
 		// post-merge:
 		// - random must be supplied
 		// - difficulty must be zero
@@ -279,6 +345,7 @@ func Transition(ctx *cli.Context) error {
 		}
 		prestate.Env.Difficulty = nil
 	} else if env.Difficulty == nil {
+		fmt.Println("not merged!")
 		// pre-merge:
 		// If difficulty was not provided by caller, we need to calculate it.
 		switch {

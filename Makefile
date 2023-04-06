@@ -8,6 +8,7 @@ GOBIN = ./build/bin
 GO ?= latest
 GORUN = env GO111MODULE=on go run
 U = $(USER)
+GO_DBG_BUILD = go build $(GO_FLAGS) -tags $(BUILD_TAGS),debug -gcflags=all="-N -l"  # see delve docs
 
 geth:
 	$(GORUN) build/ci.go install ./cmd/geth
@@ -22,6 +23,9 @@ test: all
 
 lint: ## Run linters.
 	$(GORUN) build/ci.go lint
+
+evm-dbg:
+	$(GO_DBG_BUILD) -o $(GOBIN)/ ./cmd/evm/...
 
 clean:
 	env GO111MODULE=on go clean -cache

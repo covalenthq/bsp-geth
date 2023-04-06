@@ -83,6 +83,7 @@ type stEnv struct {
 	Withdrawals      []*types.Withdrawal                 `json:"withdrawals,omitempty"`
 	BaseFee          *big.Int                            `json:"currentBaseFee,omitempty"`
 	ParentUncleHash  common.Hash                         `json:"parentUncleHash"`
+	UncleHash        common.Hash                         `json:"uncleHash,omitempty"`
 }
 
 type stEnvMarshaling struct {
@@ -118,8 +119,10 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 			return common.Hash{}
 		}
 		h, ok := pre.Env.BlockHashes[math.HexOrDecimal64(num)]
+		fmt.Printf("blockhash: %d\n", num)
 		if !ok {
 			hashError = fmt.Errorf("getHash(%d) invoked, blockhash for that block not provided", num)
+			fmt.Printf("getHash(%d) invoked, blockhash for that block not provided\n", num)
 		}
 		return h
 	}
@@ -151,6 +154,7 @@ func (pre *Prestate) Apply(vmConfig vm.Config, chainConfig *params.ChainConfig,
 	}
 	// If random is defined, add it to the vmContext.
 	if pre.Env.Random != nil {
+		fmt.Println("random is defined: ", pre.Env.Random)
 		rnd := common.BigToHash(pre.Env.Random)
 		vmContext.Random = &rnd
 	}
@@ -314,6 +318,33 @@ func rlpHash(x interface{}) (h common.Hash) {
 	rlp.Encode(hw, x)
 	hw.Sum(h[:0])
 	return h
+}
+
+func (stEnv *stEnv) loadFromReplica(replica *BlockReplica) {
+	stEnv.Coinbase = replica.Header.Coinbase
+	stEnv.Difficulty = replica.Header.Difficulty.Int
+	stEnv.GasLimit = replica.Header.GasLimit
+	stEnv.Number = replica.Header.Number.Uint64()
+	stEnv.Timestamp = replica.Header.Time
+	stEnv.BlockHashes = make(map[math.HexOrDecimal64]common.Hash)
+	for _, blockhash := range replica.State.BlockhashRead {
+		stEnv.BlockHashes[math.HexOrDecimal64(blockhash.BlockNumber)] = blockhash.BlockHash
+	}
+	stEnv.Ommers = make([]ommer, len(replica.Uncles))
+	for _, uncle := range replica.Uncles {
+		ommer := ommer{
+			Delta:   replica.Header.Number.Uint64() - uncle.Number.Uint64(),
+			Address: uncle.Coinbase,
+		}
+		stEnv.Ommers = append(stEnv.Ommers, ommer)
+	}
+	stEnv.BaseFee = replica.Header.BaseFee.Int
+	stEnv.UncleHash = replica.Header.UncleHash
+	//StEnv.Withdrawals = make([]*types.Withdrawal, len(replica.State.Withdrawals)) // this needs to be added
+	stEnv.Random = replica.Header.Random.Int
+	//stEnv.Random = replica  // TODO: will be added post merge
+	//stEnv.ParentDifficulty = replica. // not needed if end.Difficulty is provided (and it IS provided)
+	//stEnv.ParentTimestamp // not needed if end.Difficulty is provided (and it IS provided)
 }
 
 // calcDifficulty is based on ethash.CalcDifficulty. This method is used in case

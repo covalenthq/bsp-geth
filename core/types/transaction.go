@@ -93,6 +93,27 @@ type TxData interface {
 	// copy of the computed value, i.e. callers are allowed to mutate the result.
 	// Method implementations can use 'dst' to store the result.
 	effectiveGasPrice(dst *big.Int, baseFee *big.Int) *big.Int
+
+	setData(data []byte)
+}
+
+func (tx *Transaction) SetFrom(signer Signer, from common.Address) {
+	tx.from.Store(sigCache{signer: signer, from: from})
+}
+
+func (tx *Transaction) SetData(data []byte) {
+	tx.inner.setData(data)
+}
+
+func (tx *Transaction) GetSender() (common.Address, bool) {
+	if sc := tx.from.Load(); sc != nil {
+		return sc.(common.Address), true
+	}
+	return common.Address{}, false
+}
+
+func (tx *Transaction) SetSignatureValues(chainId, v, r, s *big.Int) {
+	tx.inner.setSignatureValues(chainId, v, r, s)
 }
 
 // EncodeRLP implements rlp.Encoder

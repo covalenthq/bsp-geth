@@ -146,6 +146,7 @@ var stateTransitionCommand = &cli.Command{
 		t8ntool.InputAllocFlag,
 		t8ntool.InputEnvFlag,
 		t8ntool.InputTxsFlag,
+		t8ntool.InputReplicaFlag,
 		t8ntool.ForknameFlag,
 		t8ntool.ChainIDFlag,
 		t8ntool.RewardFlag,
