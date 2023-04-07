@@ -75,7 +75,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	txsRlp := make([]*types.TransactionExportRLP, len(block.Transactions()))
 	for i, tx := range block.Transactions() {
 		txsExp[i] = (*types.TransactionForExport)(tx)
-		txsRlp[i] = txsExp[i].ExportTx(chainConfig, block.Number())
+		txsRlp[i] = txsExp[i].ExportTx(chainConfig, block.Number(), header.BaseFee)
 		if !replicaConfig.EnableSpecimen {
 			txsRlp[i].V, txsRlp[i].R, txsRlp[i].S = nil, nil, nil
 		}

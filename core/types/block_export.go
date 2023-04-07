@@ -78,7 +78,7 @@ func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 	return enc
 }
 
-func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int) *TransactionExportRLP {
+func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int, baseFee *big.Int) *TransactionExportRLP {
 	var inner_tx *Transaction = (*Transaction)(tx)
 	v, r, s := tx.inner.rawSignatureValues()
 	var signer Signer = MakeSigner(chainConfig, blockNumber)
@@ -88,7 +88,7 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 
 	return &TransactionExportRLP{
 		AccountNonce: txData.nonce(),
-		Price:        txData.gasPrice(),
+		Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
 		GasLimit:     txData.gas(),
 		Sender:       &from,
 		Recipient:    txData.to(),
