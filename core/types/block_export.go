@@ -18,6 +18,7 @@ type ExportBlockReplica struct {
 	Receipts     []*ReceiptExportRLP
 	Senders      []common.Address
 	State        *StateSpecimen
+	Withdrawals  []*WithdrawalExportRLP
 }
 
 type LogsExportRLP struct {
@@ -41,6 +42,15 @@ type ReceiptExportRLP struct {
 	ContractAddress   common.Address
 	Logs              []*LogsExportRLP
 	GasUsed           uint64
+}
+
+type WithdrawalForExport Withdrawal
+
+type WithdrawalExportRLP struct {
+	Index     uint64         `json:"index"`          // monotonically increasing identifier issued by consensus layer
+	Validator uint64         `json:"validatorIndex"` // index of validator associated with withdrawal
+	Address   common.Address `json:"address"`        // target address for withdrawn ether
+	Amount    uint64         `json:"amount"`         // value of withdrawal in Gwei
 }
 
 type TransactionForExport Transaction
@@ -76,6 +86,15 @@ func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 		enc.Logs[i] = (*LogsExportRLP)(log)
 	}
 	return enc
+}
+
+func (r *WithdrawalForExport) ExportWithdrawal() *WithdrawalExportRLP {
+	return &WithdrawalExportRLP{
+		Index:     r.Index,
+		Validator: r.Validator,
+		Address:   r.Address,
+		Amount:    r.Amount,
+	}
 }
 
 func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int) *TransactionExportRLP {
