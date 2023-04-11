@@ -81,6 +81,14 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 		}
 	}
 
+	// withdrawals
+	withdrawalsExp := make([]*types.WithdrawalForExport, len(block.Withdrawals()))
+	withdrawalsRlp := make([]*types.WithdrawalExportRLP, len(block.Withdrawals()))
+	for i, withdrawal := range block.Withdrawals() {
+		withdrawalsExp[i] = (*types.WithdrawalForExport)(withdrawal)
+		withdrawalsRlp[i] = withdrawalsExp[i].ExportWithdrawal()
+	}
+
 	//receipts
 	receipts := rawdb.ReadRawReceipts(bc.db, bHash, bNum)
 	receiptsExp := make([]*types.ReceiptForExport, len(receipts))
@@ -118,6 +126,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Receipts:     receiptsRlp,
 			Senders:      senders,
 			State:        stateSpecimen,
+			Withdrawals:  withdrawalsRlp,
 		}
 		log.Debug("Exporting full block-replica")
 		return exportBlockReplica, nil
@@ -133,6 +142,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Receipts:     []*types.ReceiptExportRLP{},
 			Senders:      senders,
 			State:        stateSpecimen,
+			Withdrawals:  withdrawalsRlp,
 		}
 		log.Debug("Exporting block-specimen only")
 		return exportBlockReplica, nil
