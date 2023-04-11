@@ -18,6 +18,7 @@ type ExportBlockReplica struct {
 	Receipts     []*ReceiptExportRLP
 	Senders      []common.Address
 	State        *StateSpecimen
+	Withdrawals  []*WithdrawalExportRLP
 }
 
 type LogsExportRLP struct {
@@ -41,6 +42,15 @@ type ReceiptExportRLP struct {
 	ContractAddress   common.Address
 	Logs              []*LogsExportRLP
 	GasUsed           uint64
+}
+
+type WithdrawalForExport Withdrawal
+
+type WithdrawalExportRLP struct {
+	Index     uint64         `json:"index"`          // monotonically increasing identifier issued by consensus layer
+	Validator uint64         `json:"validatorIndex"` // index of validator associated with withdrawal
+	Address   common.Address `json:"address"`        // target address for withdrawn ether
+	Amount    uint64         `json:"amount"`         // value of withdrawal in Gwei
 }
 
 type TransactionForExport Transaction
@@ -78,7 +88,16 @@ func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 	return enc
 }
 
-func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int) *TransactionExportRLP {
+func (r *WithdrawalForExport) ExportWithdrawal() *WithdrawalExportRLP {
+	return &WithdrawalExportRLP{
+		Index:     r.Index,
+		Validator: r.Validator,
+		Address:   r.Address,
+		Amount:    r.Amount,
+	}
+}
+
+func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int, baseFee *big.Int) *TransactionExportRLP {
 	var inner_tx *Transaction = (*Transaction)(tx)
 	v, r, s := tx.inner.rawSignatureValues()
 	var signer Signer = MakeSigner(chainConfig, blockNumber)
@@ -88,7 +107,7 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 
 	return &TransactionExportRLP{
 		AccountNonce: txData.nonce(),
-		Price:        txData.gasPrice(),
+		Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
 		GasLimit:     txData.gas(),
 		Sender:       &from,
 		Recipient:    txData.to(),
