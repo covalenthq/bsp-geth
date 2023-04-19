@@ -82,11 +82,14 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	}
 
 	// withdrawals
-	withdrawalsExp := make([]*types.WithdrawalForExport, len(block.Withdrawals()))
-	withdrawalsRlp := make([]*types.WithdrawalExportRLP, len(block.Withdrawals()))
-	for i, withdrawal := range block.Withdrawals() {
-		withdrawalsExp[i] = (*types.WithdrawalForExport)(withdrawal)
-		withdrawalsRlp[i] = withdrawalsExp[i].ExportWithdrawal()
+	var withdrawalsRlp []*types.WithdrawalExportRLP = nil
+	if chainConfig.IsShanghai(block.Time()) {
+		withdrawalsExp := make([]*types.WithdrawalForExport, len(block.Withdrawals()))
+		withdrawalsRlp = make([]*types.WithdrawalExportRLP, len(block.Withdrawals()))
+		for i, withdrawal := range block.Withdrawals() {
+			withdrawalsExp[i] = (*types.WithdrawalForExport)(withdrawal)
+			withdrawalsRlp[i] = withdrawalsExp[i].ExportWithdrawal()
+		}
 	}
 
 	//receipts
