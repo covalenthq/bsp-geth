@@ -16,7 +16,7 @@ require (
 	github.com/consensys/gnark-crypto v0.9.1-0.20230105202408-1a7a29904a7c
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set/v2 v2.1.0
-	github.com/docker/docker v23.0.1+incompatible
+	github.com/docker/docker v23.0.3+incompatible
 	github.com/dop251/goja v0.0.0-20230122112309-96b1610dd4f7
 	github.com/edsrzf/mmap-go v1.0.0
 	github.com/fatih/color v1.15.0
