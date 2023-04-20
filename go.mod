@@ -28,7 +28,7 @@ require (
 	github.com/go-redis/redis/v7 v7.4.1
 	github.com/go-stack/stack v1.8.1
 	github.com/gofrs/flock v0.8.1
-	github.com/golang-jwt/jwt/v4 v4.3.0
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang/protobuf v1.5.3
 	github.com/golang/snappy v0.0.4
 	github.com/google/gofuzz v1.1.1-0.20200604201612-c04b05f3adfa
