@@ -30,7 +30,7 @@ const (
 const (
 	BspVersionMajor = 1 // Major version component of the current release
 	BspVersionMinor = 4 // Minor version component of the current release
-	BspVersionPatch = 1 // Patch version component of the current release
+	BspVersionPatch = 3 // Patch version component of the current release
 )
 
 // Version holds the textual version string.
