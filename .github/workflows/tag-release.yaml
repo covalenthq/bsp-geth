@@ -3,7 +3,7 @@ name: tag-release
 on:
   push:
     tags:
-      - "v*"
+      - "v*.*.*"
 
 jobs:
   tagged-release:
@@ -11,6 +11,24 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
+      - name: Login to GCR
+        uses: docker/login-action@v2
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY }}
+
+      - uses: actions/checkout@v2
+
+      # - uses: satackey/action-docker-layer-caching@v0.0.11
+
+      - name: Set env
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Build & Publish the Docker image
+        run: |
+          docker buildx create --name builder --use --platform=linux/amd64,linux/arm64  && docker buildx build --platform=linux/amd64,linux/arm64 . -t gcr.io/covalent-project/bsp-geth:stable -t gcr.io/covalent-project/bsp-geth:"${{ env.TAG }}" --push
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"

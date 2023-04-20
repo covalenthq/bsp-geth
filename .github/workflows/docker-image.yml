@@ -22,7 +22,6 @@ jobs:
         password: ${{ secrets.CR_PAT }}
 
     - uses: actions/checkout@v2
-    - uses: satackey/action-docker-layer-caching@v0.0.11
     - name: Build & Publish the Docker image
       if: ${{ !env.ACT }}
       run: | 
