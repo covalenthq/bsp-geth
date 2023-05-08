@@ -13,7 +13,7 @@ require (
 	github.com/cespare/cp v0.1.0
 	github.com/cloudflare/cloudflare-go v0.14.0
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811
-	github.com/consensys/gnark-crypto v0.9.1-0.20230105202408-1a7a29904a7c
+	github.com/consensys/gnark-crypto v0.11.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set/v2 v2.1.0
 	github.com/docker/docker v23.0.3+incompatible
@@ -84,6 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.8 // indirect
 	github.com/aws/smithy-go v1.12.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bits-and-blooms/bitset v1.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
