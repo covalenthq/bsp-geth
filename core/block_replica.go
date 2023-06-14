@@ -75,7 +75,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	txsRlp := make([]*types.TransactionExportRLP, len(block.Transactions()))
 	for i, tx := range block.Transactions() {
 		txsExp[i] = (*types.TransactionForExport)(tx)
-		txsRlp[i] = txsExp[i].ExportTx(chainConfig, block.Number(), header.BaseFee)
+		txsRlp[i] = txsExp[i].ExportTx(chainConfig, block.Number(), header.BaseFee, header.Time)
 		if !replicaConfig.EnableSpecimen {
 			txsRlp[i].V, txsRlp[i].R, txsRlp[i].S = nil, nil, nil
 		}
@@ -83,7 +83,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 
 	// withdrawals
 	var withdrawalsRlp []*types.WithdrawalExportRLP = nil
-	if chainConfig.IsShanghai(block.Time()) {
+	if chainConfig.IsShanghai(block.Number(), block.Time()) {
 		withdrawalsExp := make([]*types.WithdrawalForExport, len(block.Withdrawals()))
 		withdrawalsRlp = make([]*types.WithdrawalExportRLP, len(block.Withdrawals()))
 		for i, withdrawal := range block.Withdrawals() {
@@ -102,7 +102,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	}
 
 	//senders
-	signer := types.MakeSigner(bc.chainConfig, block.Number())
+	signer := types.MakeSigner(bc.chainConfig, block.Number(), block.Time())
 	senders := make([]common.Address, 0, len(block.Transactions()))
 	for _, tx := range block.Transactions() {
 		sender, err := types.Sender(signer, tx)

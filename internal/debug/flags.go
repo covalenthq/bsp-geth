@@ -20,10 +20,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	_ "net/http/pprof" // nolint: gosec
-	"net/url"
+	_ "net/http/pprof"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 
 	"github.com/ethereum/go-ethereum/internal/flags"
@@ -34,7 +33,6 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/sys/unix"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -47,15 +45,33 @@ var (
 		Value:    3,
 		Category: flags.LoggingCategory,
 	}
+	logVmoduleFlag = &cli.StringFlag{
+		Name:     "log.vmodule",
+		Usage:    "Per-module verbosity: comma-separated list of <pattern>=<level> (e.g. eth/*=5,p2p=4)",
+		Value:    "",
+		Category: flags.LoggingCategory,
+	}
 	vmoduleFlag = &cli.StringFlag{
 		Name:     "vmodule",
 		Usage:    "Per-module verbosity: comma-separated list of <pattern>=<level> (e.g. eth/*=5,p2p=4)",
 		Value:    "",
+		Hidden:   true,
 		Category: flags.LoggingCategory,
 	}
 	logjsonFlag = &cli.BoolFlag{
 		Name:     "log.json",
 		Usage:    "Format logs with JSON",
+		Hidden:   true,
+		Category: flags.LoggingCategory,
+	}
+	logFormatFlag = &cli.StringFlag{
+		Name:     "log.format",
+		Usage:    "Log format to use (json|logfmt|terminal)",
+		Category: flags.LoggingCategory,
+	}
+	logFileFlag = &cli.StringFlag{
+		Name:     "log.file",
+		Usage:    "Write logs to a file",
 		Category: flags.LoggingCategory,
 	}
 	backtraceAtFlag = &cli.StringFlag{
@@ -69,10 +85,33 @@ var (
 		Usage:    "Prepends log messages with call-site location (file and line number)",
 		Category: flags.LoggingCategory,
 	}
-	logLocationFlag = &flags.DirectoryFlag{
-		Name:  "log.folder",
-		Usage: "Location where the log files should be placed",
-		Value: flags.DirectoryString("./logs/"),
+	logRotateFlag = &cli.BoolFlag{
+		Name:  "log.rotate",
+		Usage: "Enables log file rotation",
+	}
+	logMaxSizeMBsFlag = &cli.IntFlag{
+		Name:     "log.maxsize",
+		Usage:    "Maximum size in MBs of a single log file",
+		Value:    100,
+		Category: flags.LoggingCategory,
+	}
+	logMaxBackupsFlag = &cli.IntFlag{
+		Name:     "log.maxbackups",
+		Usage:    "Maximum number of log files to retain",
+		Value:    10,
+		Category: flags.LoggingCategory,
+	}
+	logMaxAgeFlag = &cli.IntFlag{
+		Name:     "log.maxage",
+		Usage:    "Maximum number of days to retain a log file",
+		Value:    30,
+		Category: flags.LoggingCategory,
+	}
+	logCompressFlag = &cli.BoolFlag{
+		Name:     "log.compress",
+		Usage:    "Compress the log files",
+		Value:    false,
+		Category: flags.LoggingCategory,
 	}
 	pprofFlag = &cli.BoolFlag{
 		Name:     "pprof",
@@ -117,11 +156,18 @@ var (
 // Flags holds all command-line flags required for debugging.
 var Flags = []cli.Flag{
 	verbosityFlag,
+	logVmoduleFlag,
 	vmoduleFlag,
-	logjsonFlag,
 	backtraceAtFlag,
 	debugFlag,
-	logLocationFlag,
+	logjsonFlag,
+	logFormatFlag,
+	logFileFlag,
+	logRotateFlag,
+	logMaxSizeMBsFlag,
+	logMaxBackupsFlag,
+	logMaxAgeFlag,
+	logCompressFlag,
 	pprofFlag,
 	pprofAddrFlag,
 	pprofPortFlag,
@@ -142,42 +188,83 @@ func init() {
 // Setup initializes profiling and logging based on the CLI flags.
 // It should be called as early as possible in the program.
 func Setup(ctx *cli.Context) error {
-	var ostream log.Handler
-	output := io.Writer(os.Stderr)
-
-	var fmtr log.Format
-	if ctx.Bool(logjsonFlag.Name) {
-		fmtr = log.JSONFormat()
-	} else {
-		usecolor := (isatty.IsTerminal(os.Stderr.Fd()) || isatty.IsCygwinTerminal(os.Stderr.Fd())) && os.Getenv("TERM") != "dumb"
-		if usecolor {
+	var (
+		logfmt     log.Format
+		output     = io.Writer(os.Stderr)
+		logFmtFlag = ctx.String(logFormatFlag.Name)
+	)
+	switch {
+	case ctx.Bool(logjsonFlag.Name):
+		// Retain backwards compatibility with `--log.json` flag if `--log.format` not set
+		defer log.Warn("The flag '--log.json' is deprecated, please use '--log.format=json' instead")
+		logfmt = log.JSONFormat()
+	case logFmtFlag == "json":
+		logfmt = log.JSONFormat()
+	case logFmtFlag == "logfmt":
+		logfmt = log.LogfmtFormat()
+	case logFmtFlag == "", logFmtFlag == "terminal":
+		useColor := (isatty.IsTerminal(os.Stderr.Fd()) || isatty.IsCygwinTerminal(os.Stderr.Fd())) && os.Getenv("TERM") != "dumb"
+		if useColor {
 			output = colorable.NewColorableStderr()
 		}
-		fmtr = log.TerminalFormat(usecolor)
+		logfmt = log.TerminalFormat(useColor)
+	default:
+		// Unknown log format specified
+		return fmt.Errorf("unknown log format: %v", ctx.String(logFormatFlag.Name))
 	}
-
-	stdHandler := log.StreamHandler(output, fmtr)
-	locationURL, err := getLogLocationURL(ctx)
-	if err != nil {
-		log.Warn("issue with initiatilizing file logger", "err", err)
-		ostream = stdHandler
+	var (
+		stdHandler = log.StreamHandler(output, logfmt)
+		ostream    = stdHandler
+		logFile    = ctx.String(logFileFlag.Name)
+		rotation   = ctx.Bool(logRotateFlag.Name)
+	)
+	if len(logFile) > 0 {
+		if err := validateLogLocation(filepath.Dir(logFile)); err != nil {
+			return fmt.Errorf("failed to initiatilize file logger: %v", err)
+		}
+	}
+	context := []interface{}{"rotate", rotation}
+	if len(logFmtFlag) > 0 {
+		context = append(context, "format", logFmtFlag)
 	} else {
-		lumberjackHandler := log.StreamHandler(&lumberjack.Logger{
-			Filename:   path.Join(locationURL.Path, "log.log"),
-			MaxSize:    100,
-			MaxBackups: 7,
-			MaxAge:     10,
-		}, fmtr)
-
-		ostream = log.MultiHandler(lumberjackHandler, stdHandler)
+		context = append(context, "format", "terminal")
 	}
-
+	if rotation {
+		// Lumberjack uses <processname>-lumberjack.log in is.TempDir() if empty.
+		// so typically /tmp/geth-lumberjack.log on linux
+		if len(logFile) > 0 {
+			context = append(context, "location", logFile)
+		} else {
+			context = append(context, "location", filepath.Join(os.TempDir(), "geth-lumberjack.log"))
+		}
+		ostream = log.MultiHandler(log.StreamHandler(&lumberjack.Logger{
+			Filename:   logFile,
+			MaxSize:    ctx.Int(logMaxSizeMBsFlag.Name),
+			MaxBackups: ctx.Int(logMaxBackupsFlag.Name),
+			MaxAge:     ctx.Int(logMaxAgeFlag.Name),
+			Compress:   ctx.Bool(logCompressFlag.Name),
+		}, logfmt), stdHandler)
+	} else if logFile != "" {
+		if logOutputStream, err := log.FileHandler(logFile, logfmt); err != nil {
+			return err
+		} else {
+			ostream = log.MultiHandler(logOutputStream, stdHandler)
+			context = append(context, "location", logFile)
+		}
+	}
 	glogger.SetHandler(ostream)
 
 	// logging
 	verbosity := ctx.Int(verbosityFlag.Name)
 	glogger.Verbosity(log.Lvl(verbosity))
-	vmodule := ctx.String(vmoduleFlag.Name)
+	vmodule := ctx.String(logVmoduleFlag.Name)
+	if vmodule == "" {
+		// Retain backwards compatibility with `--vmodule` flag if `--log.vmodule` not set
+		vmodule = ctx.String(vmoduleFlag.Name)
+		if vmodule != "" {
+			defer log.Warn("The flag '--vmodule' is deprecated, please use '--log.vmodule' instead")
+		}
+	}
 	glogger.Vmodule(vmodule)
 
 	debug := ctx.Bool(debugFlag.Name)
@@ -223,6 +310,9 @@ func Setup(ctx *cli.Context) error {
 		// It cannot be imported because it will cause a cyclical dependency.
 		StartPProf(address, !ctx.IsSet("metrics.addr"))
 	}
+	if len(logFile) > 0 || rotation {
+		log.Info("Logging configured", context...)
+	}
 	return nil
 }
 
@@ -248,27 +338,16 @@ func Exit() {
 	Handler.StopGoTrace()
 }
 
-func getLogLocationURL(ctx *cli.Context) (*url.URL, error) {
-	locationURL, err := url.Parse(ctx.String(logLocationFlag.Name))
-	if err == nil {
-		if _, existErr := os.Stat(locationURL.Path); os.IsNotExist(existErr) {
-			// directory doesn't exist, create
-			createErr := os.Mkdir(locationURL.Path, os.ModePerm)
-			if createErr != nil {
-				return nil, fmt.Errorf("error creating the directory: %w", createErr)
-			}
-		}
-
-		if !writable(locationURL.Path) {
-			return nil, fmt.Errorf("write access not present for given log location")
-		}
-
-		return locationURL, nil
+func validateLogLocation(path string) error {
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return fmt.Errorf("error creating the directory: %w", err)
 	}
-
-	return locationURL, fmt.Errorf("log-folder: %w", err)
-}
-
-func writable(path string) bool {
-	return unix.Access(path, unix.W_OK) == nil
+	// Check if the path is writable by trying to create a temporary file
+	tmp := filepath.Join(path, "tmp")
+	if f, err := os.Create(tmp); err != nil {
+		return err
+	} else {
+		f.Close()
+	}
+	return os.Remove(tmp)
 }
