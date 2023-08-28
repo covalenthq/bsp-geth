@@ -66,6 +66,11 @@ func BigToHash(b *big.Int) Hash { return BytesToHash(b.Bytes()) }
 // If b is larger than len(h), b will be cropped from the left.
 func HexToHash(s string) Hash { return BytesToHash(FromHex(s)) }
 
+// Cmp compares two hashes.
+func (h Hash) Cmp(other Hash) int {
+	return bytes.Compare(h[:], other[:])
+}
+
 // Bytes gets the byte representation of the underlying hash.
 func (h Hash) Bytes() []byte { return h[:] }
 
@@ -225,6 +230,11 @@ func IsHexAddress(s string) bool {
 		s = s[2:]
 	}
 	return len(s) == 2*AddressLength && isHex(s)
+}
+
+// Cmp compares two addresses.
+func (a Address) Cmp(other Address) int {
+	return bytes.Compare(a[:], other[:])
 }
 
 // Bytes gets the string representation of the underlying address.
