@@ -245,7 +245,7 @@ Prior to executing, please replace `<user>` with correct local username within t
   --replication.targets "redis://localhost:6379/?topic=replication-1" \
   --replica.result \
   --replica.specimen \
-  --log.folder "./logs/"
+  --log.file "./logs/geth.log"
 ```
 
 `bsp-geth` only produces block specimens for live blocks once state sync is complete. In order to check the status of your sync progress. Connect to the node’s IPC instance to check how far the node is synced.
@@ -358,7 +358,7 @@ If you see all of the above you're successfully running the full BSP pipeline.
 
 If both `--replica-result` & `--replica-specimen` are selected then a `block-replica` is exported containing all the fields for exporting any block fully along with its stored state.
 
-`--log-folder` - specifies the location (folder) where the log files have to be placed. In case of error (like permission errors), the logs are not recorded in files.
+`--log.file` - specifies the file location where the log files have to be placed. In case of error (like permission errors), the logs are not recorded in files.
 
 ## <span id="geth">Go Ethereum</span>
 
@@ -484,15 +484,6 @@ crossing over between the main network and test network, you should always
 use separate accounts for play and real money. Unless you manually move
 accounts, `geth` will by default correctly separate the two networks and will not make any
 accounts available between them.*
-
-### Full node on the Rinkeby test network
-
-Go Ethereum also supports connecting to the older proof-of-authority based test network
-called [*Rinkeby*](https://www.rinkeby.io) which is operated by members of the community.
-
-```shell
-$ geth --rinkeby console
-```
 
 ### Configuration
 

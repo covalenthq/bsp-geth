@@ -97,10 +97,10 @@ func (r *WithdrawalForExport) ExportWithdrawal() *WithdrawalExportRLP {
 	}
 }
 
-func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int, baseFee *big.Int) *TransactionExportRLP {
+func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int, baseFee *big.Int, blockTime uint64) *TransactionExportRLP {
 	var inner_tx *Transaction = (*Transaction)(tx)
 	v, r, s := tx.inner.rawSignatureValues()
-	var signer Signer = MakeSigner(chainConfig, blockNumber)
+	var signer Signer = MakeSigner(chainConfig, blockNumber, blockTime)
 	from, _ := Sender(signer, inner_tx)
 
 	txData := tx.inner
