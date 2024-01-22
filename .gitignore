@@ -47,6 +47,7 @@ profile.cov
 /dashboard/assets/package-lock.json
 
 **/yarn-error.log
+<<<<<<< HEAD
 
 data/
 ganache_data/
@@ -56,3 +57,8 @@ logs/
 coverage.out
 coverage.txt
 logs/
+=======
+logs/
+
+tests/spec-tests/
+>>>>>>> bc0be1b1060b51b802b88a1a528d36021f21c324
