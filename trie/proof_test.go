@@ -438,47 +438,7 @@ func TestSingleSideRangeProof(t *testing.T) {
 				k = append(k, entries[i].k)
 				v = append(v, entries[i].v)
 			}
-<<<<<<< HEAD
-			_, err := VerifyRangeProof(trie.Hash(), common.Hash{}.Bytes(), k[len(k)-1], k, v, proof)
-			if err != nil {
-				t.Fatalf("Expected no error, got %v", err)
-			}
-		}
-	}
-}
-
-// TestReverseSingleSideRangeProof tests the range ends with 0xffff...fff.
-func TestReverseSingleSideRangeProof(t *testing.T) {
-	for i := 0; i < 64; i++ {
-		trie := NewEmpty(NewDatabase(rawdb.NewMemoryDatabase()))
-		var entries []*kv
-		for i := 0; i < 4096; i++ {
-			value := &kv{randBytes(32), randBytes(20), false}
-			trie.MustUpdate(value.k, value.v)
-			entries = append(entries, value)
-		}
-		slices.SortFunc(entries, (*kv).cmp)
-
-		var cases = []int{0, 1, 50, 100, 1000, 2000, len(entries) - 1}
-		for _, pos := range cases {
-			proof := memorydb.New()
-			if err := trie.Prove(entries[pos].k, proof); err != nil {
-				t.Fatalf("Failed to prove the first node %v", err)
-			}
-			last := common.HexToHash("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-			if err := trie.Prove(last.Bytes(), proof); err != nil {
-				t.Fatalf("Failed to prove the last node %v", err)
-			}
-			k := make([][]byte, 0)
-			v := make([][]byte, 0)
-			for i := pos; i < len(entries); i++ {
-				k = append(k, entries[i].k)
-				v = append(v, entries[i].v)
-			}
-			_, err := VerifyRangeProof(trie.Hash(), k[0], last.Bytes(), k, v, proof)
-=======
 			_, err := VerifyRangeProof(trie.Hash(), common.Hash{}.Bytes(), k, v, proof)
->>>>>>> bc0be1b1060b51b802b88a1a528d36021f21c324
 			if err != nil {
 				t.Fatalf("Expected no error, got %v", err)
 			}
