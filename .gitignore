@@ -55,4 +55,4 @@ scripts/
 logs/
 coverage.out
 coverage.txt
-logs/
+tests/spec-tests/

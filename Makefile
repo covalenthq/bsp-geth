@@ -6,8 +6,7 @@
 
 GOBIN = ./build/bin
 GO ?= latest
-GORUN = env GO111MODULE=on go run
-U = $(USER)
+GORUN = go run
 
 geth:
 	$(GORUN) build/ci.go install ./cmd/geth
@@ -24,7 +23,7 @@ lint: ## Run linters.
 	$(GORUN) build/ci.go lint
 
 clean:
-	env GO111MODULE=on go clean -cache
+	go clean -cache
 	rm -fr build/_workspace/pkg/ $(GOBIN)/*
 
 run-geth-bsp:

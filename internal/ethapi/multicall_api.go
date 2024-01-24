@@ -59,15 +59,7 @@ func (s *BlockChainAPI) Multicall(ctx context.Context, commonCallArgs Transactio
 			// get a new instance of the EVM to be used once
 			// ethapi's vmError callback always returns nil, so it is dropped here
 			//GetEVM(ctx context.Context, msg *core.Message, state *state.StateDB, header *types.Header, vmConfig *vm.Config, blockCtx *vm.BlockContext) (*vm.EVM, func() error)
-			evm, getVmErr := s.b.GetEVM(ctx, msg, state, header, nil, nil)
-			vmErr := getVmErr()
-
-			if vmErr != nil {
-				// if we cannot retrieve the an EVM for any message, that failure
-				// implies a fault in the node as a whole, so we should give up on
-				// processing the entire request
-				return nil, vmErr
-			}
+			evm := s.b.GetEVM(ctx, msg, state, header, nil, nil)
 
 			execResult, applyMsgErr := core.ApplyMessage(evm, msg, gp)
 
