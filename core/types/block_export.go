@@ -56,21 +56,25 @@ type WithdrawalExportRLP struct {
 type TransactionForExport Transaction
 
 type TransactionExportRLP struct {
-	Type         byte            `json:"type"`
-	AccessList   AccessList      `json:"accessList"`
-	ChainId      *big.Int        `json:"chainId"`
-	AccountNonce uint64          `json:"nonce"`
-	Price        *big.Int        `json:"gasPrice"`
-	GasLimit     uint64          `json:"gas"`
-	GasTipCap    *big.Int        `json:"gasTipCap"`
-	GasFeeCap    *big.Int        `json:"gasFeeCap"`
-	Sender       *common.Address `json:"from" rlp:"nil"`
-	Recipient    *common.Address `json:"to" rlp:"nil"` // nil means contract creation
-	Amount       *big.Int        `json:"value"`
-	Payload      []byte          `json:"input"`
-	V            *big.Int        `json:"v" rlp:"nil"`
-	R            *big.Int        `json:"r" rlp:"nil"`
-	S            *big.Int        `json:"s" rlp:"nil"`
+	Type          byte            `json:"type"`
+	AccessList    AccessList      `json:"accessList"`
+	ChainId       *big.Int        `json:"chainId"`
+	AccountNonce  uint64          `json:"nonce"`
+	Price         *big.Int        `json:"gasPrice"`
+	GasLimit      uint64          `json:"gas"`
+	GasTipCap     *big.Int        `json:"gasTipCap"`
+	GasFeeCap     *big.Int        `json:"gasFeeCap"`
+	Sender        *common.Address `json:"from" rlp:"nil"`
+	Recipient     *common.Address `json:"to" rlp:"nil"` // nil means contract creation
+	Amount        *big.Int        `json:"value"`
+	Payload       []byte          `json:"input"`
+	BlobFeeCap    *big.Int        `json:"blobFeeCap"`
+	BlobHashes    []common.Hash   `json:"blobHashes"`
+	BlobGas       uint64          `json:"blobGas"`
+	BlobTxSidecar *BlobTxSidecar  `json:"blobTxSideCar"`
+	V             *big.Int        `json:"v" rlp:"nil"`
+	R             *big.Int        `json:"r" rlp:"nil"`
+	S             *big.Int        `json:"s" rlp:"nil"`
 }
 
 func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
@@ -121,5 +125,13 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 		V:            v,
 		R:            r,
 		S:            s,
+		BlobFeeCap:   inner_tx.BlobGasFeeCap(),
+		BlobHashes:   inner_tx.BlobHashes(),
+		BlobGas:      inner_tx.BlobGas(),
+		BlobTxSidecar: &BlobTxSidecar{
+			Blobs:       inner_tx.BlobTxSidecar().Blobs,
+			Commitments: inner_tx.BlobTxSidecar().Commitments,
+			Proofs:      inner_tx.BlobTxSidecar().Proofs,
+		},
 	}
 }
