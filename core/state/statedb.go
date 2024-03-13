@@ -612,7 +612,7 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 		}
 	}
 	if s.stateSpecimen != nil {
-		s.stateSpecimen.LogAccountRead(addr, data.Nonce, data.Balance, data.CodeHash)
+		s.stateSpecimen.LogAccountRead(addr, data.Nonce, data.Balance.ToBig(), data.CodeHash)
 	}
 
 	// Insert into the live set
