@@ -11,6 +11,10 @@ on:
       - "main"
       - "develop"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   push-image:
     runs-on: ubuntu-latest
