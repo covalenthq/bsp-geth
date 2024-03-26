@@ -149,10 +149,10 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 			V:             v,
 			R:             r,
 			S:             s,
-			BlobFeeCap:    nil,
-			BlobHashes:    nil,
+			BlobFeeCap:    &big.Int{},
+			BlobHashes:    make([]common.Hash, 0),
 			BlobGas:       0,
-			BlobTxSidecar: nil,
+			BlobTxSidecar: &BlobTxSidecar{},
 		}
 	}
 }
