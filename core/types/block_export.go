@@ -109,29 +109,49 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 
 	txData := tx.inner
 
-	return &TransactionExportRLP{
-		AccountNonce: txData.nonce(),
-		Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
-		GasLimit:     txData.gas(),
-		Sender:       &from,
-		Recipient:    txData.to(),
-		Amount:       txData.value(),
-		Payload:      txData.data(),
-		Type:         txData.txType(),
-		ChainId:      txData.chainID(),
-		AccessList:   txData.accessList(),
-		GasTipCap:    txData.gasTipCap(),
-		GasFeeCap:    txData.gasFeeCap(),
-		V:            v,
-		R:            r,
-		S:            s,
-		BlobFeeCap:   inner_tx.BlobGasFeeCap(),
-		BlobHashes:   inner_tx.BlobHashes(),
-		BlobGas:      inner_tx.BlobGas(),
-		BlobTxSidecar: &BlobTxSidecar{
-			Blobs:       inner_tx.BlobTxSidecar().Blobs,
-			Commitments: inner_tx.BlobTxSidecar().Commitments,
-			Proofs:      inner_tx.BlobTxSidecar().Proofs,
-		},
+	if inner_tx.Type() == BlobTxType {
+		return &TransactionExportRLP{
+			AccountNonce: txData.nonce(),
+			Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
+			GasLimit:     txData.gas(),
+			Sender:       &from,
+			Recipient:    txData.to(),
+			Amount:       txData.value(),
+			Payload:      txData.data(),
+			Type:         txData.txType(),
+			ChainId:      txData.chainID(),
+			AccessList:   txData.accessList(),
+			GasTipCap:    txData.gasTipCap(),
+			GasFeeCap:    txData.gasFeeCap(),
+			V:            v,
+			R:            r,
+			S:            s,
+			BlobFeeCap:   inner_tx.BlobGasFeeCap(),
+			BlobHashes:   inner_tx.BlobHashes(),
+			BlobGas:      inner_tx.BlobGas(),
+			BlobTxSidecar: &BlobTxSidecar{
+				Blobs:       inner_tx.BlobTxSidecar().Blobs,
+				Commitments: inner_tx.BlobTxSidecar().Commitments,
+				Proofs:      inner_tx.BlobTxSidecar().Proofs,
+			},
+		}
+	} else {
+		return &TransactionExportRLP{
+			AccountNonce: txData.nonce(),
+			Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
+			GasLimit:     txData.gas(),
+			Sender:       &from,
+			Recipient:    txData.to(),
+			Amount:       txData.value(),
+			Payload:      txData.data(),
+			Type:         txData.txType(),
+			ChainId:      txData.chainID(),
+			AccessList:   txData.accessList(),
+			GasTipCap:    txData.gasTipCap(),
+			GasFeeCap:    txData.gasFeeCap(),
+			V:            v,
+			R:            r,
+			S:            s,
+		}
 	}
 }
