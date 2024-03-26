@@ -68,10 +68,10 @@ type TransactionExportRLP struct {
 	Recipient     *common.Address `json:"to" rlp:"nil"` // nil means contract creation
 	Amount        *big.Int        `json:"value"`
 	Payload       []byte          `json:"input"`
-	BlobFeeCap    *big.Int        `json:"blobFeeCap"`
-	BlobHashes    []common.Hash   `json:"blobHashes"`
-	BlobGas       uint64          `json:"blobGas"`
-	BlobTxSidecar *BlobTxSidecar  `json:"blobTxSideCar"`
+	BlobFeeCap    *big.Int        `json:"blobFeeCap" rlp:"optional"`
+	BlobHashes    []common.Hash   `json:"blobHashes" rlp:"optional"`
+	BlobGas       uint64          `json:"blobGas" rlp:"optional"`
+	BlobTxSidecar *BlobTxSidecar  `json:"blobTxSidecar" rlp:"optional"`
 	V             *big.Int        `json:"v" rlp:"nil"`
 	R             *big.Int        `json:"r" rlp:"nil"`
 	S             *big.Int        `json:"s" rlp:"nil"`
