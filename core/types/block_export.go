@@ -8,17 +8,18 @@ import (
 )
 
 type ExportBlockReplica struct {
-	Type         string
-	NetworkId    uint64
-	Hash         common.Hash
-	TotalDiff    *big.Int
-	Header       *Header
-	Transactions []*TransactionExportRLP
-	Uncles       []*Header
-	Receipts     []*ReceiptExportRLP
-	Senders      []common.Address
-	State        *StateSpecimen
-	Withdrawals  []*WithdrawalExportRLP
+	Type           string
+	NetworkId      uint64
+	Hash           common.Hash
+	TotalDiff      *big.Int
+	Header         *Header
+	Transactions   []*TransactionExportRLP
+	Uncles         []*Header
+	Receipts       []*ReceiptExportRLP
+	Senders        []common.Address
+	State          *StateSpecimen
+	Withdrawals    []*WithdrawalExportRLP
+	BlobTxSidecars []*BlobTxSidecar
 }
 
 type LogsExportRLP struct {
@@ -71,7 +72,17 @@ type TransactionExportRLP struct {
 	V            *big.Int        `json:"v" rlp:"nil"`
 	R            *big.Int        `json:"r" rlp:"nil"`
 	S            *big.Int        `json:"s" rlp:"nil"`
+	BlobFeeCap   *big.Int        `json:"blobFeeCap" rlp:"optional"`
+	BlobHashes   []common.Hash   `json:"blobHashes" rlp:"optional"`
+	BlobGas      uint64          `json:"blobGas" rlp:"optional"`
 }
+
+type BlobTxSidecarData struct {
+	Sidecar     []*BlobTxSidecar
+	BlockNumber *big.Int
+}
+
+var BlobTxSidecarChan = make(chan *BlobTxSidecarData, 1000)
 
 func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 	enc := &ReceiptExportRLP{
@@ -105,21 +116,47 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 
 	txData := tx.inner
 
-	return &TransactionExportRLP{
-		AccountNonce: txData.nonce(),
-		Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
-		GasLimit:     txData.gas(),
-		Sender:       &from,
-		Recipient:    txData.to(),
-		Amount:       txData.value(),
-		Payload:      txData.data(),
-		Type:         txData.txType(),
-		ChainId:      txData.chainID(),
-		AccessList:   txData.accessList(),
-		GasTipCap:    txData.gasTipCap(),
-		GasFeeCap:    txData.gasFeeCap(),
-		V:            v,
-		R:            r,
-		S:            s,
+	if inner_tx.Type() == BlobTxType {
+		return &TransactionExportRLP{
+			AccountNonce: txData.nonce(),
+			Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
+			GasLimit:     txData.gas(),
+			Sender:       &from,
+			Recipient:    txData.to(),
+			Amount:       txData.value(),
+			Payload:      txData.data(),
+			Type:         txData.txType(),
+			ChainId:      txData.chainID(),
+			AccessList:   txData.accessList(),
+			GasTipCap:    txData.gasTipCap(),
+			GasFeeCap:    txData.gasFeeCap(),
+			V:            v,
+			R:            r,
+			S:            s,
+			BlobFeeCap:   inner_tx.BlobGasFeeCap(),
+			BlobHashes:   inner_tx.BlobHashes(),
+			BlobGas:      inner_tx.BlobGas(),
+		}
+	} else {
+		return &TransactionExportRLP{
+			AccountNonce: txData.nonce(),
+			Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
+			GasLimit:     txData.gas(),
+			Sender:       &from,
+			Recipient:    txData.to(),
+			Amount:       txData.value(),
+			Payload:      txData.data(),
+			Type:         txData.txType(),
+			ChainId:      txData.chainID(),
+			AccessList:   txData.accessList(),
+			GasTipCap:    txData.gasTipCap(),
+			GasFeeCap:    txData.gasFeeCap(),
+			V:            v,
+			R:            r,
+			S:            s,
+			BlobFeeCap:   &big.Int{},
+			BlobHashes:   make([]common.Hash, 0),
+			BlobGas:      0,
+		}
 	}
 }
