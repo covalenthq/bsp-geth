@@ -110,7 +110,8 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 	txData := tx.inner
 
 	if inner_tx.Type() == BlobTxType {
-		blobtx, _ := tx.inner.(*BlobTx)
+		// blobtx, _ := tx.inner.(*BlobTx)
+		// blobtx.blobGas()
 		return &TransactionExportRLP{
 			AccountNonce:  txData.nonce(),
 			Price:         txData.effectiveGasPrice(&big.Int{}, baseFee),
@@ -130,7 +131,7 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 			BlobFeeCap:    inner_tx.BlobGasFeeCap(),
 			BlobHashes:    inner_tx.BlobHashes(),
 			BlobGas:       inner_tx.BlobGas(),
-			BlobTxSidecar: blobtx.Sidecar,
+			BlobTxSidecar: &BlobTxSidecar{},
 		}
 	} else {
 		return &TransactionExportRLP{
