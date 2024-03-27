@@ -25,9 +25,17 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 	var blobTxSidecars []*types.BlobTxSidecar
 	for sidecarData := range types.BlobTxSidecarChan {
 		if sidecarData.BlockNumber == block.Header().Number {
-			fmt.Println("Consuming Sidecar From Miner Side Channel", sidecarData.BlockNumber)
+			log.Info("Consuming Sidecar From Miner Side Channel: ", sidecarData.BlockNumber)
 			blobTxSidecars = append(blobTxSidecars, sidecarData.Sidecar...)
+		} else {
+			log.Info("Blob Sidecar did not match block number from Miner Side Channel: ", sidecarData.BlockNumber)
 		}
+		fmt.Println(sidecarData.BlockNumber, "side car header block number")
+		fmt.Println(sidecarData.ParentBeaconRoot, "side car parent beacon block root")
+	}
+
+	for sideCar := range blobTxSidecars {
+		fmt.Println(sideCar, "full side car")
 	}
 
 	//block replica

@@ -78,8 +78,9 @@ type TransactionExportRLP struct {
 }
 
 type BlobTxSidecarData struct {
-	Sidecar     []*BlobTxSidecar
-	BlockNumber *big.Int
+	Sidecar          []*BlobTxSidecar
+	BlockNumber      *big.Int
+	ParentBeaconRoot *common.Hash
 }
 
 var BlobTxSidecarChan = make(chan *BlobTxSidecarData, 1000)
