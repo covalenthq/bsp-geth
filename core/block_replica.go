@@ -21,8 +21,17 @@ type BlockReplicationEvent struct {
 }
 
 func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen) error {
+
+	var blobTxSidecars []*types.BlobTxSidecar
+	for sidecarData := range types.BlobTxSidecarChan {
+		if sidecarData.BlockNumber == block.Header().Number {
+			fmt.Println("Consuming Sidecar From Miner Side Channel", sidecarData.BlockNumber)
+			blobTxSidecars = append(blobTxSidecars, sidecarData.Sidecar...)
+		}
+	}
+
 	//block replica
-	exportBlockReplica, err := bc.createReplica(block, replicaConfig, chainConfig, stateSpecimen)
+	exportBlockReplica, err := bc.createReplica(block, replicaConfig, chainConfig, stateSpecimen, blobTxSidecars)
 	if err != nil {
 		return err
 	}
@@ -50,7 +59,7 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 	}
 }
 
-func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen) (*types.ExportBlockReplica, error) {
+func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen, blobSpecimen []*types.BlobTxSidecar) (*types.ExportBlockReplica, error) {
 	bHash := block.Hash()
 	bNum := block.NumberU64()
 
@@ -119,48 +128,51 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	//block replica export
 	if replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
-			Type:         "block-replica",
-			NetworkId:    chainConfig.ChainID.Uint64(),
-			Hash:         bHash,
-			TotalDiff:    td,
-			Header:       header,
-			Transactions: txsRlp,
-			Uncles:       uncles,
-			Receipts:     receiptsRlp,
-			Senders:      senders,
-			State:        stateSpecimen,
-			Withdrawals:  withdrawalsRlp,
+			Type:           "block-replica",
+			NetworkId:      chainConfig.ChainID.Uint64(),
+			Hash:           bHash,
+			TotalDiff:      td,
+			Header:         header,
+			Transactions:   txsRlp,
+			Uncles:         uncles,
+			Receipts:       receiptsRlp,
+			Senders:        senders,
+			State:          stateSpecimen,
+			Withdrawals:    withdrawalsRlp,
+			BlobTxSidecars: blobSpecimen,
 		}
 		log.Debug("Exporting full block-replica")
 		return exportBlockReplica, nil
 	} else if replicaConfig.EnableSpecimen && !replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
-			Type:         "block-specimen",
-			NetworkId:    chainConfig.ChainID.Uint64(),
-			Hash:         bHash,
-			TotalDiff:    td,
-			Header:       header,
-			Transactions: txsRlp,
-			Uncles:       uncles,
-			Receipts:     []*types.ReceiptExportRLP{},
-			Senders:      senders,
-			State:        stateSpecimen,
-			Withdrawals:  withdrawalsRlp,
+			Type:           "block-specimen",
+			NetworkId:      chainConfig.ChainID.Uint64(),
+			Hash:           bHash,
+			TotalDiff:      td,
+			Header:         header,
+			Transactions:   txsRlp,
+			Uncles:         uncles,
+			Receipts:       []*types.ReceiptExportRLP{},
+			Senders:        senders,
+			State:          stateSpecimen,
+			Withdrawals:    withdrawalsRlp,
+			BlobTxSidecars: blobSpecimen,
 		}
 		log.Debug("Exporting block-specimen only")
 		return exportBlockReplica, nil
 	} else if !replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
-			Type:         "block-result",
-			NetworkId:    chainConfig.ChainID.Uint64(),
-			Hash:         bHash,
-			TotalDiff:    td,
-			Header:       header,
-			Transactions: txsRlp,
-			Uncles:       uncles,
-			Receipts:     receiptsRlp,
-			Senders:      senders,
-			State:        &types.StateSpecimen{},
+			Type:           "block-result",
+			NetworkId:      chainConfig.ChainID.Uint64(),
+			Hash:           bHash,
+			TotalDiff:      td,
+			Header:         header,
+			Transactions:   txsRlp,
+			Uncles:         uncles,
+			Receipts:       receiptsRlp,
+			Senders:        senders,
+			State:          &types.StateSpecimen{},
+			BlobTxSidecars: blobSpecimen,
 		}
 		log.Debug("Exporting block-result only")
 		return exportBlockReplica, nil
