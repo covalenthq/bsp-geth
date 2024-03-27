@@ -116,6 +116,13 @@ func (env *environment) copy() *environment {
 	cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
 	copy(cpy.sidecars, env.sidecars)
 
+	go func() {
+		types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
+			Sidecar:     env.sidecars,
+			BlockNumber: env.header.Number,
+		}
+	}()
+
 	return cpy
 }
 
