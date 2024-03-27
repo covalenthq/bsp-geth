@@ -118,8 +118,9 @@ func (env *environment) copy() *environment {
 
 	go func() {
 		types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
-			Sidecar:     env.sidecars,
-			BlockNumber: env.header.Number,
+			Sidecar:          env.sidecars,
+			BlockNumber:      env.header.Number,
+			ParentBeaconRoot: env.header.ParentBeaconRoot,
 		}
 	}()
 
