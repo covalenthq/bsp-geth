@@ -116,6 +116,9 @@ func (env *environment) copy() *environment {
 	cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
 	copy(cpy.sidecars, env.sidecars)
 
+	fmt.Println(cpy.header.ParentBeaconRoot, "Parent Beacon Root found")
+	fmt.Println(cpy.sidecars, "Sidecars also found")
+
 	return cpy
 }
 

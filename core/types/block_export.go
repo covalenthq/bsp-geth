@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto/kzg4844"
 	"github.com/ethereum/go-ethereum/params"
 )
 
@@ -77,6 +78,14 @@ type TransactionExportRLP struct {
 	BlobTxSidecar *BlobTxSidecar  `json:"blobTxSidecar" rlp:"optional"`
 }
 
+type BlobsSidecarForExport BlobTxSidecar
+
+type BlobTxSidecarExportRLP struct {
+	Blobs       []kzg4844.Blob
+	Commitments []kzg4844.Commitment
+	Proofs      []kzg4844.Proof
+}
+
 func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 	enc := &ReceiptExportRLP{
 		PostStateOrStatus: (*Receipt)(r).statusEncoding(),
@@ -98,6 +107,14 @@ func (r *WithdrawalForExport) ExportWithdrawal() *WithdrawalExportRLP {
 		Validator: r.Validator,
 		Address:   r.Address,
 		Amount:    r.Amount,
+	}
+}
+
+func (blob *BlobsSidecarForExport) ExportBlob(blobTxSidecar *BlobTxSidecar) *BlobTxSidecarExportRLP {
+	return &BlobTxSidecarExportRLP{
+		Blobs:       blobTxSidecar.Blobs,
+		Commitments: blobTxSidecar.Commitments,
+		Proofs:      blobTxSidecar.Proofs,
 	}
 }
 
