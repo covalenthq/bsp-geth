@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto/kzg4844"
 	"github.com/ethereum/go-ethereum/params"
 )
 
@@ -56,21 +57,33 @@ type WithdrawalExportRLP struct {
 type TransactionForExport Transaction
 
 type TransactionExportRLP struct {
-	Type         byte            `json:"type"`
-	AccessList   AccessList      `json:"accessList"`
-	ChainId      *big.Int        `json:"chainId"`
-	AccountNonce uint64          `json:"nonce"`
-	Price        *big.Int        `json:"gasPrice"`
-	GasLimit     uint64          `json:"gas"`
-	GasTipCap    *big.Int        `json:"gasTipCap"`
-	GasFeeCap    *big.Int        `json:"gasFeeCap"`
-	Sender       *common.Address `json:"from" rlp:"nil"`
-	Recipient    *common.Address `json:"to" rlp:"nil"` // nil means contract creation
-	Amount       *big.Int        `json:"value"`
-	Payload      []byte          `json:"input"`
-	V            *big.Int        `json:"v" rlp:"nil"`
-	R            *big.Int        `json:"r" rlp:"nil"`
-	S            *big.Int        `json:"s" rlp:"nil"`
+	Type          byte            `json:"type"`
+	AccessList    AccessList      `json:"accessList"`
+	ChainId       *big.Int        `json:"chainId"`
+	AccountNonce  uint64          `json:"nonce"`
+	Price         *big.Int        `json:"gasPrice"`
+	GasLimit      uint64          `json:"gas"`
+	GasTipCap     *big.Int        `json:"gasTipCap"`
+	GasFeeCap     *big.Int        `json:"gasFeeCap"`
+	Sender        *common.Address `json:"from" rlp:"nil"`
+	Recipient     *common.Address `json:"to" rlp:"nil"` // nil means contract creation
+	Amount        *big.Int        `json:"value"`
+	Payload       []byte          `json:"input"`
+	V             *big.Int        `json:"v" rlp:"nil"`
+	R             *big.Int        `json:"r" rlp:"nil"`
+	S             *big.Int        `json:"s" rlp:"nil"`
+	BlobFeeCap    *big.Int        `json:"blobFeeCap" rlp:"optional"`
+	BlobHashes    []common.Hash   `json:"blobHashes" rlp:"optional"`
+	BlobGas       uint64          `json:"blobGas" rlp:"optional"`
+	BlobTxSidecar *BlobTxSidecar  `json:"blobTxSidecar" rlp:"optional"`
+}
+
+type BlobsSidecarForExport BlobTxSidecar
+
+type BlobTxSidecarExportRLP struct {
+	Blobs       []kzg4844.Blob
+	Commitments []kzg4844.Commitment
+	Proofs      []kzg4844.Proof
 }
 
 func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
@@ -97,6 +110,14 @@ func (r *WithdrawalForExport) ExportWithdrawal() *WithdrawalExportRLP {
 	}
 }
 
+func (blob *BlobsSidecarForExport) ExportBlob(blobTxSidecar *BlobTxSidecar) *BlobTxSidecarExportRLP {
+	return &BlobTxSidecarExportRLP{
+		Blobs:       blobTxSidecar.Blobs,
+		Commitments: blobTxSidecar.Commitments,
+		Proofs:      blobTxSidecar.Proofs,
+	}
+}
+
 func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockNumber *big.Int, baseFee *big.Int, blockTime uint64) *TransactionExportRLP {
 	var inner_tx *Transaction = (*Transaction)(tx)
 	v, r, s := tx.inner.rawSignatureValues()
@@ -105,21 +126,51 @@ func (tx *TransactionForExport) ExportTx(chainConfig *params.ChainConfig, blockN
 
 	txData := tx.inner
 
-	return &TransactionExportRLP{
-		AccountNonce: txData.nonce(),
-		Price:        txData.effectiveGasPrice(&big.Int{}, baseFee),
-		GasLimit:     txData.gas(),
-		Sender:       &from,
-		Recipient:    txData.to(),
-		Amount:       txData.value(),
-		Payload:      txData.data(),
-		Type:         txData.txType(),
-		ChainId:      txData.chainID(),
-		AccessList:   txData.accessList(),
-		GasTipCap:    txData.gasTipCap(),
-		GasFeeCap:    txData.gasFeeCap(),
-		V:            v,
-		R:            r,
-		S:            s,
+	if inner_tx.Type() == BlobTxType {
+		// blobtx, _ := tx.inner.(*BlobTx)
+		// blobtx.blobGas()
+		return &TransactionExportRLP{
+			AccountNonce:  txData.nonce(),
+			Price:         txData.effectiveGasPrice(&big.Int{}, baseFee),
+			GasLimit:      txData.gas(),
+			Sender:        &from,
+			Recipient:     txData.to(),
+			Amount:        txData.value(),
+			Payload:       txData.data(),
+			Type:          txData.txType(),
+			ChainId:       txData.chainID(),
+			AccessList:    txData.accessList(),
+			GasTipCap:     txData.gasTipCap(),
+			GasFeeCap:     txData.gasFeeCap(),
+			V:             v,
+			R:             r,
+			S:             s,
+			BlobFeeCap:    inner_tx.BlobGasFeeCap(),
+			BlobHashes:    inner_tx.BlobHashes(),
+			BlobGas:       inner_tx.BlobGas(),
+			BlobTxSidecar: &BlobTxSidecar{},
+		}
+	} else {
+		return &TransactionExportRLP{
+			AccountNonce:  txData.nonce(),
+			Price:         txData.effectiveGasPrice(&big.Int{}, baseFee),
+			GasLimit:      txData.gas(),
+			Sender:        &from,
+			Recipient:     txData.to(),
+			Amount:        txData.value(),
+			Payload:       txData.data(),
+			Type:          txData.txType(),
+			ChainId:       txData.chainID(),
+			AccessList:    txData.accessList(),
+			GasTipCap:     txData.gasTipCap(),
+			GasFeeCap:     txData.gasFeeCap(),
+			V:             v,
+			R:             r,
+			S:             s,
+			BlobFeeCap:    &big.Int{},
+			BlobHashes:    make([]common.Hash, 0),
+			BlobGas:       0,
+			BlobTxSidecar: &BlobTxSidecar{},
+		}
 	}
 }
