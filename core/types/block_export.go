@@ -82,7 +82,7 @@ type BlobTxSidecarData struct {
 	BlockNumber *big.Int
 }
 
-var BlobTxSidecarChan = make(chan *BlobTxSidecarData, 1000)
+var BlobTxSidecarChan = make(chan *BlobTxSidecarData, 100)
 
 func (r *ReceiptForExport) ExportReceipt() *ReceiptExportRLP {
 	enc := &ReceiptExportRLP{

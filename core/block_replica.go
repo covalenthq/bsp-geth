@@ -22,25 +22,23 @@ type BlockReplicationEvent struct {
 
 func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *ReplicaConfig, chainConfig *params.ChainConfig, stateSpecimen *types.StateSpecimen) error {
 
+	// blobs
 	var blobTxSidecars []*types.BlobTxSidecar
 	for sidecarData := range types.BlobTxSidecarChan {
 		if sidecarData.BlockNumber.Uint64() == block.NumberU64() {
-			log.Info("Consuming Sidecar From Miner Side Channel: ", sidecarData.BlockNumber)
+			log.Info("Consuming BlobTxSidecar Match From Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
 			blobTxSidecars = append(blobTxSidecars, sidecarData.Blobs)
 		} else {
-			log.Info("Blob Sidecar did not match block number from Miner Side Channel: ", sidecarData.BlockNumber.Uint64())
+			log.Info("Failing BlobTxSidecar Match from Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
 		}
-		fmt.Println("side car header block number:", sidecarData.BlockNumber)
-		fmt.Println("length of sidecar channel:", len(types.BlobTxSidecarChan))
 
-		// blobTxSidecars = append(blobTxSidecars, sidecarData.Blobs)
+		log.Info("BlobTxSidecar Header", "Block Number:", sidecarData.BlockNumber.Uint64())
+
+		log.Info("Chain Sync Sidecar Channel", "Length:", len(types.BlobTxSidecarChan))
+
 	}
 
-	// for _, sidecarData := range blobTxSidecars {
-	// 	fmt.Println(*sidecarData, "full side car")
-	// }
-
-	//block replica
+	//block replica with blobs
 	exportBlockReplica, err := bc.createReplica(block, replicaConfig, chainConfig, stateSpecimen, blobTxSidecars)
 	if err != nil {
 		return err
