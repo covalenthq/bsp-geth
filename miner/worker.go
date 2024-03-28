@@ -80,6 +80,8 @@ var (
 	errBlockInterruptedByTimeout  = errors.New("timeout while building block")
 )
 
+var BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 1000)
+
 // environment is the worker's current environment and holds all
 // information of the sealing block generation.
 type environment struct {
@@ -116,12 +118,17 @@ func (env *environment) copy() *environment {
 	cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
 	copy(cpy.sidecars, env.sidecars)
 
+	types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 1000)
+
 	go func() {
-		types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
-			Sidecar:          env.sidecars,
-			BlockNumber:      env.header.Number,
-			ParentBeaconRoot: env.header.ParentBeaconRoot,
+		for sidecar := range env.sidecars {
+			types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
+				Blobs:       env.sidecars[sidecar],
+				BlockNumber: env.header.Number,
+			}
 		}
+		fmt.Println("closed sidecar channel in miner")
+		close(types.BlobTxSidecarChan)
 	}()
 
 	return cpy
