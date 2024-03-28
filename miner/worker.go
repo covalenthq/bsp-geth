@@ -118,7 +118,7 @@ func (env *environment) copy() *environment {
 	cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
 	copy(cpy.sidecars, env.sidecars)
 
-	types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 1000)
+	types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 100)
 
 	go func() {
 		for sidecar := range env.sidecars {
@@ -127,7 +127,7 @@ func (env *environment) copy() *environment {
 				BlockNumber: env.header.Number,
 			}
 		}
-		fmt.Println("closed sidecar channel in miner")
+		log.Info("Closing Chain Sync BlobTxSidecar Channel For", "Block Number:", env.header.Number.Uint64(), "Length:", len(types.BlobTxSidecarChan))
 		close(types.BlobTxSidecarChan)
 	}()
 
