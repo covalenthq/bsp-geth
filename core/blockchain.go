@@ -267,6 +267,7 @@ type BlockChain struct {
 type ReplicaConfig struct {
 	EnableSpecimen         bool
 	EnableResult           bool
+	EnableBlob             bool
 	HistoricalBlocksSynced *uint32
 }
 

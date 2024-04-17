@@ -134,7 +134,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	uncles := block.Uncles()
 
 	//block replica export
-	if replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
+	if replicaConfig.EnableSpecimen && replicaConfig.EnableResult && replicaConfig.EnableBlob {
 		exportBlockReplica := &types.ExportBlockReplica{
 			Type:           "block-replica",
 			NetworkId:      chainConfig.ChainID.Uint64(),
@@ -149,43 +149,41 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Withdrawals:    withdrawalsRlp,
 			BlobTxSidecars: blobSpecimen,
 		}
-		log.Debug("Exporting full block-replica")
+		log.Debug("Exporting complete block-replica with blob specimens")
 		return exportBlockReplica, nil
 	} else if replicaConfig.EnableSpecimen && !replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
-			Type:           "block-specimen",
-			NetworkId:      chainConfig.ChainID.Uint64(),
-			Hash:           bHash,
-			TotalDiff:      td,
-			Header:         header,
-			Transactions:   txsRlp,
-			Uncles:         uncles,
-			Receipts:       []*types.ReceiptExportRLP{},
-			Senders:        senders,
-			State:          stateSpecimen,
-			Withdrawals:    withdrawalsRlp,
-			BlobTxSidecars: blobSpecimen,
+			Type:         "block-specimen",
+			NetworkId:    chainConfig.ChainID.Uint64(),
+			Hash:         bHash,
+			TotalDiff:    td,
+			Header:       header,
+			Transactions: txsRlp,
+			Uncles:       uncles,
+			Receipts:     []*types.ReceiptExportRLP{},
+			Senders:      senders,
+			State:        stateSpecimen,
+			Withdrawals:  withdrawalsRlp,
 		}
-		log.Debug("Exporting block-specimen only")
+		log.Debug("Exporting block-specimen only (no blob specimens)")
 		return exportBlockReplica, nil
 	} else if !replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
-			Type:           "block-result",
-			NetworkId:      chainConfig.ChainID.Uint64(),
-			Hash:           bHash,
-			TotalDiff:      td,
-			Header:         header,
-			Transactions:   txsRlp,
-			Uncles:         uncles,
-			Receipts:       receiptsRlp,
-			Senders:        senders,
-			State:          &types.StateSpecimen{},
-			BlobTxSidecars: blobSpecimen,
+			Type:         "block-result",
+			NetworkId:    chainConfig.ChainID.Uint64(),
+			Hash:         bHash,
+			TotalDiff:    td,
+			Header:       header,
+			Transactions: txsRlp,
+			Uncles:       uncles,
+			Receipts:     receiptsRlp,
+			Senders:      senders,
+			State:        &types.StateSpecimen{},
 		}
-		log.Debug("Exporting block-result only")
+		log.Debug("Exporting block-result only (no blob specimens)")
 		return exportBlockReplica, nil
 	} else {
-		return nil, fmt.Errorf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
+		return nil, fmt.Errorf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result (ONLY add --replica.blob with both replica.specimen and replica.result flags for complete unified state capture)")
 	}
 }
 

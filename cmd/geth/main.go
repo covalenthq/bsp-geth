@@ -149,6 +149,7 @@ var (
 		utils.BlockReplicationTargetsFlag,
 		utils.ReplicaEnableResultFlag,
 		utils.ReplicaEnableSpecimenFlag,
+		utils.ReplicaEnableBlobFlag,
 	}, utils.NetworkFlags, utils.DatabaseFlags)
 
 	rpcFlags = []cli.Flag{
