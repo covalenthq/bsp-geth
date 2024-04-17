@@ -116,11 +116,10 @@ func (env *environment) copy() *environment {
 	cpy.txs = make([]*types.Transaction, len(env.txs))
 	copy(cpy.txs, env.txs)
 
-	cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
-	copy(cpy.sidecars, env.sidecars)
-
-	types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 100)
 	if enableBlobTxSidecar {
+		cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
+		copy(cpy.sidecars, env.sidecars)
+		types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 100)
 		go func() {
 			for sidecar := range env.sidecars {
 				types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
