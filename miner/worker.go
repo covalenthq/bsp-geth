@@ -80,8 +80,8 @@ var (
 	errBlockInterruptedByTimeout  = errors.New("timeout while building block")
 )
 
-var BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 1000)
 var enableBlobTxSidecar bool
+var closeOnce sync.Once
 
 // environment is the worker's current environment and holds all
 // information of the sealing block generation.
@@ -128,7 +128,9 @@ func (env *environment) copy() *environment {
 				}
 			}
 			log.Info("Closing Chain Sync BlobTxSidecar Channel For", "Block Number:", env.header.Number.Uint64(), "Length:", len(types.BlobTxSidecarChan))
-			close(types.BlobTxSidecarChan)
+			closeOnce.Do(func() {
+				close(types.BlobTxSidecarChan)
+			})
 		}()
 	}
 

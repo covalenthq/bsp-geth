@@ -316,6 +316,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, genesis *Genesis
 		ReplicaConfig: &ReplicaConfig{
 			EnableSpecimen:         false,
 			EnableResult:           false,
+			EnableBlob:             false,
 			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
 		},
 	}
