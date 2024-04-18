@@ -104,6 +104,7 @@ if one is set.  Otherwise it prints the genesis from the datadir.`,
 			utils.BlockReplicationTargetsFlag,
 			utils.ReplicaEnableSpecimenFlag,
 			utils.ReplicaEnableResultFlag,
+			utils.ReplicaEnableBlobFlag,
 		}, utils.DatabaseFlags),
 		Description: `
 The import command imports blocks from an RLP-encoded form. The form can be one file

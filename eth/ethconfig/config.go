@@ -160,6 +160,7 @@ type Config struct {
 	// Bools that make explicit types being exported
 	ReplicaEnableResult   bool
 	ReplicaEnableSpecimen bool
+	ReplicaEnableBlob     bool
 
 	// OverrideCancun (TODO: remove after the fork)
 	OverrideCancun *uint64 `toml:",omitempty"`

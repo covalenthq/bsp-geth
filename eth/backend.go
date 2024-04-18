@@ -177,6 +177,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		ReplicaConfig: &core.ReplicaConfig{
 			EnableSpecimen:         config.ReplicaEnableSpecimen,
 			EnableResult:           config.ReplicaEnableResult,
+			EnableBlob:             config.ReplicaEnableBlob,
 			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
 		},
 	}
@@ -186,7 +187,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId, "export block-specimen", eth.ReplicaConfig.EnableSpecimen, "export block-result", eth.ReplicaConfig.EnableResult)
+		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId, "export block-specimen", eth.ReplicaConfig.EnableSpecimen, "export block-result", eth.ReplicaConfig.EnableResult, "export blob-specimen", eth.ReplicaConfig.EnableBlob)
 		eth.blockReplicators = append(eth.blockReplicators, replicator)
 	}
 	bcVersion := rawdb.ReadDatabaseVersion(chainDb)

@@ -24,20 +24,18 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 
 	// blobs
 	var blobTxSidecars []*types.BlobTxSidecar
-	for sidecarData := range types.BlobTxSidecarChan {
-		if sidecarData.BlockNumber.Uint64() == block.NumberU64() {
-			log.Info("Consuming BlobTxSidecar Match From Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
-			blobTxSidecars = append(blobTxSidecars, sidecarData.Blobs)
-		} else {
-			log.Info("Failing BlobTxSidecar Match from Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
+	if replicaConfig.EnableBlob {
+		for sidecarData := range types.BlobTxSidecarChan {
+			if sidecarData.BlockNumber.Uint64() == block.NumberU64() {
+				log.Info("Consuming BlobTxSidecar Match From Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
+				blobTxSidecars = append(blobTxSidecars, sidecarData.Blobs)
+			} else {
+				log.Info("Failing BlobTxSidecar Match from Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
+			}
+			log.Info("BlobTxSidecar Header", "Block Number:", sidecarData.BlockNumber.Uint64())
+			log.Info("Chain Sync Sidecar Channel", "Length:", len(types.BlobTxSidecarChan))
 		}
-
-		log.Info("BlobTxSidecar Header", "Block Number:", sidecarData.BlockNumber.Uint64())
-
-		log.Info("Chain Sync Sidecar Channel", "Length:", len(types.BlobTxSidecarChan))
-
 	}
-
 	//block replica with blobs
 	exportBlockReplica, err := bc.createReplica(block, replicaConfig, chainConfig, stateSpecimen, blobTxSidecars)
 	if err != nil {
@@ -134,7 +132,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	uncles := block.Uncles()
 
 	//block replica export
-	if replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
+	if replicaConfig.EnableSpecimen && replicaConfig.EnableResult && replicaConfig.EnableBlob {
 		exportBlockReplica := &types.ExportBlockReplica{
 			Type:           "block-replica",
 			NetworkId:      chainConfig.ChainID.Uint64(),
@@ -149,7 +147,7 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Withdrawals:    withdrawalsRlp,
 			BlobTxSidecars: blobSpecimen,
 		}
-		log.Debug("Exporting full block-replica")
+		log.Debug("Exporting full block-replica with blob-specimen")
 		return exportBlockReplica, nil
 	} else if replicaConfig.EnableSpecimen && !replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
@@ -164,9 +162,9 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Senders:        senders,
 			State:          stateSpecimen,
 			Withdrawals:    withdrawalsRlp,
-			BlobTxSidecars: blobSpecimen,
+			BlobTxSidecars: []*types.BlobTxSidecar{},
 		}
-		log.Debug("Exporting block-specimen only")
+		log.Debug("Exporting block-specimen only (no blob specimens)")
 		return exportBlockReplica, nil
 	} else if !replicaConfig.EnableSpecimen && replicaConfig.EnableResult {
 		exportBlockReplica := &types.ExportBlockReplica{
@@ -180,12 +178,12 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 			Receipts:       receiptsRlp,
 			Senders:        senders,
 			State:          &types.StateSpecimen{},
-			BlobTxSidecars: blobSpecimen,
+			BlobTxSidecars: []*types.BlobTxSidecar{},
 		}
-		log.Debug("Exporting block-result only")
+		log.Debug("Exporting block-result only (no blob specimens)")
 		return exportBlockReplica, nil
 	} else {
-		return nil, fmt.Errorf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
+		return nil, fmt.Errorf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result, ADD --replica.blob with both replica.specimen AND replica.result flags for complete unified state capture aka block-replica)")
 	}
 }
 
@@ -200,6 +198,9 @@ func (bc *BlockChain) SetBlockReplicaExports(replicaConfig *ReplicaConfig) bool 
 	}
 	if replicaConfig.EnableSpecimen {
 		bc.ReplicaConfig.EnableSpecimen = true
+	}
+	if replicaConfig.EnableBlob {
+		bc.ReplicaConfig.EnableBlob = true
 	}
 	return true
 }

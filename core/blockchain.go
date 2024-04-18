@@ -267,6 +267,7 @@ type BlockChain struct {
 type ReplicaConfig struct {
 	EnableSpecimen         bool
 	EnableResult           bool
+	EnableBlob             bool
 	HistoricalBlocksSynced *uint32
 }
 
@@ -315,6 +316,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, genesis *Genesis
 		ReplicaConfig: &ReplicaConfig{
 			EnableSpecimen:         false,
 			EnableResult:           false,
+			EnableBlob:             false,
 			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
 		},
 	}
@@ -1891,7 +1893,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool) (int, error)
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
 			// Is impossible but keeping in line to be nice to our future selves we add this for now
-			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			if bc.ReplicaConfig.EnableSpecimen || bc.ReplicaConfig.EnableResult {
+				bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			}
 		}
 	}
 
