@@ -1851,7 +1851,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool) (int, error)
 
 		if !setHead {
 			// Export Block Specimen
-			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			if bc.ReplicaConfig.EnableSpecimen || bc.ReplicaConfig.EnableResult {
+				bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			}
 			// After merge we expect few side chains. Simply count
 			// all blocks the CL gives us for GC processing time
 			bc.gcproc += proctime
@@ -1865,7 +1867,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool) (int, error)
 				"elapsed", common.PrettyDuration(time.Since(start)),
 				"root", block.Root())
 			// Handle creation of block specimen for canonical blocks
-			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			if bc.ReplicaConfig.EnableSpecimen || bc.ReplicaConfig.EnableResult {
+				bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			}
 			lastCanon = block
 
 			// Only count canonical blocks for GC processing time
