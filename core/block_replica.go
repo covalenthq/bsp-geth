@@ -24,18 +24,18 @@ func (bc *BlockChain) createBlockReplica(block *types.Block, replicaConfig *Repl
 
 	// blobs
 	var blobTxSidecars []*types.BlobTxSidecar
-	for sidecarData := range types.BlobTxSidecarChan {
-		if sidecarData.BlockNumber.Uint64() == block.NumberU64() {
-			log.Info("Consuming BlobTxSidecar Match From Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
-			blobTxSidecars = append(blobTxSidecars, sidecarData.Blobs)
-		} else {
-			log.Info("Failing BlobTxSidecar Match from Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
+	if replicaConfig.EnableBlob {
+		for sidecarData := range types.BlobTxSidecarChan {
+			if sidecarData.BlockNumber.Uint64() == block.NumberU64() {
+				log.Info("Consuming BlobTxSidecar Match From Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
+				blobTxSidecars = append(blobTxSidecars, sidecarData.Blobs)
+			} else {
+				log.Info("Failing BlobTxSidecar Match from Chain Sync Channel", "Block Number:", sidecarData.BlockNumber.Uint64())
+			}
+
+			log.Info("BlobTxSidecar Header", "Block Number:", sidecarData.BlockNumber.Uint64())
+			log.Info("Chain Sync Sidecar Channel", "Length:", len(types.BlobTxSidecarChan))
 		}
-
-		log.Info("BlobTxSidecar Header", "Block Number:", sidecarData.BlockNumber.Uint64())
-
-		log.Info("Chain Sync Sidecar Channel", "Length:", len(types.BlobTxSidecarChan))
-
 	}
 
 	//block replica with blobs
