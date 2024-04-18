@@ -694,6 +694,10 @@ var (
 		Name:  "replica.result",
 		Usage: "Enables export of fields that comprise a block-result",
 	}
+	ReplicaEnableBlobFlag = &cli.BoolFlag{
+		Name:  "replica.blob",
+		Usage: "Enables export of fields that comprise a block-blob",
+	}
 	BatchRequestLimit = &cli.IntFlag{
 		Name:     "rpc.batch-request-limit",
 		Usage:    "Maximum number of requests in a batch",
@@ -2188,8 +2192,11 @@ func setBlockReplicationTargets(ctx *cli.Context, cfg *eth.Config) {
 		if ctx.Bool(ReplicaEnableResultFlag.Name) {
 			cfg.ReplicaEnableResult = true
 		}
+		if ctx.Bool(ReplicaEnableBlobFlag.Name) {
+			cfg.ReplicaEnableBlob = true
+		}
 	} else {
-		Fatalf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result")
+		Fatalf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result, ONLY ADD --replica.blob with both replica.specimen AND replica.result flags for complete unified state capture)")
 	}
 }
 

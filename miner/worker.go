@@ -80,7 +80,7 @@ var (
 	errBlockInterruptedByTimeout  = errors.New("timeout while building block")
 )
 
-var BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 1000)
+var enableBlobTxSidecar bool
 
 // environment is the worker's current environment and holds all
 // information of the sealing block generation.
@@ -115,21 +115,21 @@ func (env *environment) copy() *environment {
 	cpy.txs = make([]*types.Transaction, len(env.txs))
 	copy(cpy.txs, env.txs)
 
-	cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
-	copy(cpy.sidecars, env.sidecars)
-
-	types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 100)
-
-	go func() {
-		for sidecar := range env.sidecars {
-			types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
-				Blobs:       env.sidecars[sidecar],
-				BlockNumber: env.header.Number,
+	if enableBlobTxSidecar {
+		cpy.sidecars = make([]*types.BlobTxSidecar, len(env.sidecars))
+		copy(cpy.sidecars, env.sidecars)
+		types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 100)
+		go func() {
+			for sidecar := range env.sidecars {
+				types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
+					Blobs:       env.sidecars[sidecar],
+					BlockNumber: env.header.Number,
+				}
 			}
-		}
-		log.Info("Closing Chain Sync BlobTxSidecar Channel For", "Block Number:", env.header.Number.Uint64(), "Length:", len(types.BlobTxSidecarChan))
-		close(types.BlobTxSidecarChan)
-	}()
+			log.Info("Closing Chain Sync BlobTxSidecar Channel For", "Block Number:", env.header.Number.Uint64(), "Length:", len(types.BlobTxSidecarChan))
+			close(types.BlobTxSidecarChan)
+		}()
+	}
 
 	return cpy
 }
@@ -304,6 +304,10 @@ func newWorker(config *Config, chainConfig *params.ChainConfig, engine consensus
 		log.Warn("Low payload timeout may cause high amount of non-full blocks", "provided", newpayloadTimeout, "default", DefaultConfig.NewPayloadTimeout)
 	}
 	worker.newpayloadTimeout = newpayloadTimeout
+
+	if worker.chain.ReplicaConfig.EnableBlob {
+		enableBlobTxSidecar = true
+	}
 
 	worker.wg.Add(4)
 	go worker.mainLoop()
