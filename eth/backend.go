@@ -186,7 +186,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId, "export block-specimen", eth.ReplicaConfig.EnableSpecimen, "export block-result", eth.ReplicaConfig.EnableResult)
+		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId, "export block-specimen", eth.ReplicaConfig.EnableSpecimen, "export block-result", eth.ReplicaConfig.EnableResult, "export blob-specimen", eth.ReplicaConfig.EnableBlob)
 		eth.blockReplicators = append(eth.blockReplicators, replicator)
 	}
 	bcVersion := rawdb.ReadDatabaseVersion(chainDb)
