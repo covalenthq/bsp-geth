@@ -56,3 +56,4 @@ logs/
 coverage.out
 coverage.txt
 tests/spec-tests/
+bin/
