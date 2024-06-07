@@ -15,7 +15,7 @@ WORKDIR /go-ethereum
 RUN go run build/ci.go install -static ./cmd/geth
 
 # Pull Geth into a second stage deploy alpine container
-FROM alpine:3.15.7
+FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates
 
