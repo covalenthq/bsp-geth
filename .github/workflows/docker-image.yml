@@ -3,30 +3,34 @@ name: docker-image-ci
 on:
   push:
     branches:
-    - "main"
+      - "main"
   pull_request:
-    branches: 
-    - "main"
-    - "develop"
+    branches:
+      - "main"
+      - "develop"
 
 jobs:
   push-image:
     runs-on: ubuntu-latest
     steps:
-    - name: Login to GitHub Container Registry
-      if: ${{ !env.ACT }}
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ secrets.CR_USER }}
-        password: ${{ secrets.CR_PAT }}
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        if: ${{ !env.ACT }}
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.CR_USER }}
+          password: ${{ secrets.CR_PAT }}
 
-    - uses: actions/checkout@v2
-    - name: Build & Publish the Docker image
-      if: ${{ !env.ACT }}
-      run: | 
-        docker build . --file Dockerfile --tag ghcr.io/covalenthq/bsp-geth:latest
-        docker push ghcr.io/covalenthq/bsp-geth:latest
+      - uses: actions/checkout@v2
+      - name: Build & Publish the Docker image
+        if: ${{ !env.ACT }}
+        run: |
+          docker build . --file Dockerfile --tag ghcr.io/covalenthq/bsp-geth:latest
+          docker push ghcr.io/covalenthq/bsp-geth:latest
 
     # - name: Start containers
     #   run: docker-compose -f "docker-compose.yml" up --build --remove-orphans --force-recreate --exit-code-from agent
