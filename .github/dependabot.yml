@@ -12,5 +12,11 @@ updates:
     target-branch: "develop"
     reviewers:
       - "noslav"
-      - "sudeepdino008"
-
+      - "rogarica"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "noslav"
+      - "rogarcia"
