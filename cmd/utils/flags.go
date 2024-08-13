@@ -2166,7 +2166,7 @@ func MakeConsolePreloads(ctx *cli.Context) []string {
 	return preloads
 }
 
-// setBlockResultTargets creates a list of replication targets from the command line flags.
+// setBlockReplicationTargets creates a list of replication targets from the command line flags.
 func setBlockReplicationTargets(ctx *cli.Context, cfg *eth.Config) {
 	var urls []string
 
