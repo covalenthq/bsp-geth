@@ -64,11 +64,11 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/urfave/cli/v2 v2.27.2
 	go.uber.org/automaxprocs v1.5.2
-	golang.org/x/crypto v0.23.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
-	golang.org/x/sync v0.8.0
-	golang.org/x/sys v0.20.0
-	golang.org/x/text v0.19.0
+	golang.org/x/sync v0.10.0
+	golang.org/x/sys v0.28.0
+	golang.org/x/text v0.21.0
 	golang.org/x/time v0.3.0
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
