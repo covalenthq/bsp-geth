@@ -6,16 +6,17 @@ ARG USER=$USER
 
 
 # Build Geth in a stock Go builder container
-FROM golang:1.22-alpine as builder
+FROM golang:1.23-alpine as builder
 
 RUN apk add --no-cache gcc musl-dev linux-headers git
 
 COPY . /go-ethereum
 WORKDIR /go-ethereum
+RUN go mod download
 RUN go run build/ci.go install -static ./cmd/geth
 
 # Pull Geth into a second stage deploy alpine container
-FROM alpine:3.20
+FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates
 
