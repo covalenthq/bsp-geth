@@ -20,6 +20,7 @@ import (
 	"math"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/tracing"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
@@ -249,7 +250,6 @@ func opKeccak256(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) (
 	if evm.Config.EnablePreimageRecording {
 		evm.StateDB.AddPreimage(interpreter.hasherBuf, data)
 	}
-
 	size.SetBytes(interpreter.hasherBuf[:])
 	return nil, nil
 }
@@ -305,7 +305,7 @@ func opCallDataCopy(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext
 	)
 	dataOffset64, overflow := dataOffset.Uint64WithOverflow()
 	if overflow {
-		dataOffset64 = 0xffffffffffffffff
+		dataOffset64 = math.MaxUint64
 	}
 	// These values are checked for overflow during gas cost calculation
 	memOffset64 := memOffset.Uint64()
@@ -596,7 +596,7 @@ func opCreate(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]b
 	// reuse size int for stackvalue
 	stackvalue := size
 
-	scope.Contract.UseGas(gas)
+	scope.Contract.UseGas(gas, interpreter.evm.Config.Tracer, tracing.GasChangeCallContractCreation)
 
 	res, addr, returnGas, suberr := interpreter.evm.Create(scope.Contract, input, gas, &value)
 	// Push item on the stack based on the returned error. If the ruleset is
@@ -611,7 +611,8 @@ func opCreate(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]b
 		stackvalue.SetBytes(addr.Bytes())
 	}
 	scope.Stack.push(&stackvalue)
-	scope.Contract.Gas += returnGas
+
+	scope.Contract.RefundGas(returnGas, interpreter.evm.Config.Tracer, tracing.GasChangeCallLeftOverRefunded)
 
 	if suberr == ErrExecutionReverted {
 		interpreter.returnData = res // set REVERT data to return data buffer
@@ -634,7 +635,7 @@ func opCreate2(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]
 	)
 	// Apply EIP150
 	gas -= gas / 64
-	scope.Contract.UseGas(gas)
+	scope.Contract.UseGas(gas, interpreter.evm.Config.Tracer, tracing.GasChangeCallContractCreation2)
 	// reuse size int for stackvalue
 	stackvalue := size
 	res, addr, returnGas, suberr := interpreter.evm.Create2(scope.Contract, input, gas,
@@ -646,7 +647,8 @@ func opCreate2(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]
 		stackvalue.SetBytes(addr.Bytes())
 	}
 	scope.Stack.push(&stackvalue)
-	scope.Contract.Gas += returnGas
+
+	scope.Contract.RefundGas(returnGas, interpreter.evm.Config.Tracer, tracing.GasChangeCallLeftOverRefunded)
 
 	if suberr == ErrExecutionReverted {
 		interpreter.returnData = res // set REVERT data to return data buffer
@@ -685,7 +687,8 @@ func opCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byt
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
-	scope.Contract.Gas += returnGas
+
+	scope.Contract.RefundGas(returnGas, interpreter.evm.Config.Tracer, tracing.GasChangeCallLeftOverRefunded)
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -717,7 +720,8 @@ func opCallCode(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
-	scope.Contract.Gas += returnGas
+
+	scope.Contract.RefundGas(returnGas, interpreter.evm.Config.Tracer, tracing.GasChangeCallLeftOverRefunded)
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -745,7 +749,8 @@ func opDelegateCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
-	scope.Contract.Gas += returnGas
+
+	scope.Contract.RefundGas(returnGas, interpreter.evm.Config.Tracer, tracing.GasChangeCallLeftOverRefunded)
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -773,7 +778,8 @@ func opStaticCall(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) 
 	if err == nil || err == ErrExecutionReverted {
 		scope.Memory.Set(retOffset.Uint64(), retSize.Uint64(), ret)
 	}
-	scope.Contract.Gas += returnGas
+
+	scope.Contract.RefundGas(returnGas, interpreter.evm.Config.Tracer, tracing.GasChangeCallLeftOverRefunded)
 
 	interpreter.returnData = ret
 	return ret, nil
@@ -808,11 +814,15 @@ func opSelfdestruct(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext
 	}
 	beneficiary := scope.Stack.pop()
 	balance := interpreter.evm.StateDB.GetBalance(scope.Contract.Address())
-	interpreter.evm.StateDB.AddBalance(beneficiary.Bytes20(), balance)
+	interpreter.evm.StateDB.AddBalance(beneficiary.Bytes20(), balance, tracing.BalanceIncreaseSelfdestruct)
 	interpreter.evm.StateDB.SelfDestruct(scope.Contract.Address())
 	if tracer := interpreter.evm.Config.Tracer; tracer != nil {
-		tracer.CaptureEnter(SELFDESTRUCT, scope.Contract.Address(), beneficiary.Bytes20(), []byte{}, 0, balance.ToBig())
-		tracer.CaptureExit([]byte{}, 0, nil)
+		if tracer.OnEnter != nil {
+			tracer.OnEnter(interpreter.evm.depth, byte(SELFDESTRUCT), scope.Contract.Address(), beneficiary.Bytes20(), []byte{}, 0, balance.ToBig())
+		}
+		if tracer.OnExit != nil {
+			tracer.OnExit(interpreter.evm.depth, []byte{}, 0, nil, false)
+		}
 	}
 	return nil, errStopToken
 }
@@ -823,12 +833,16 @@ func opSelfdestruct6780(pc *uint64, interpreter *EVMInterpreter, scope *ScopeCon
 	}
 	beneficiary := scope.Stack.pop()
 	balance := interpreter.evm.StateDB.GetBalance(scope.Contract.Address())
-	interpreter.evm.StateDB.SubBalance(scope.Contract.Address(), balance)
-	interpreter.evm.StateDB.AddBalance(beneficiary.Bytes20(), balance)
+	interpreter.evm.StateDB.SubBalance(scope.Contract.Address(), balance, tracing.BalanceDecreaseSelfdestruct)
+	interpreter.evm.StateDB.AddBalance(beneficiary.Bytes20(), balance, tracing.BalanceIncreaseSelfdestruct)
 	interpreter.evm.StateDB.Selfdestruct6780(scope.Contract.Address())
 	if tracer := interpreter.evm.Config.Tracer; tracer != nil {
-		tracer.CaptureEnter(SELFDESTRUCT, scope.Contract.Address(), beneficiary.Bytes20(), []byte{}, 0, balance.ToBig())
-		tracer.CaptureExit([]byte{}, 0, nil)
+		if tracer.OnEnter != nil {
+			tracer.OnEnter(interpreter.evm.depth, byte(SELFDESTRUCT), scope.Contract.Address(), beneficiary.Bytes20(), []byte{}, 0, balance.ToBig())
+		}
+		if tracer.OnExit != nil {
+			tracer.OnExit(interpreter.evm.depth, []byte{}, 0, nil, false)
+		}
 	}
 	return nil, errStopToken
 }
@@ -881,22 +895,17 @@ func opPush1(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]by
 // make push instruction function
 func makePush(size uint64, pushByteSize int) executionFunc {
 	return func(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) ([]byte, error) {
-		codeLen := len(scope.Contract.Code)
-
-		startMin := codeLen
-		if int(*pc+1) < startMin {
-			startMin = int(*pc + 1)
-		}
-
-		endMin := codeLen
-		if startMin+pushByteSize < endMin {
-			endMin = startMin + pushByteSize
-		}
-
-		integer := new(uint256.Int)
-		scope.Stack.push(integer.SetBytes(common.RightPadBytes(
-			scope.Contract.Code[startMin:endMin], pushByteSize)))
-
+		var (
+			codeLen = len(scope.Contract.Code)
+			start   = min(codeLen, int(*pc+1))
+			end     = min(codeLen, start+pushByteSize)
+		)
+		scope.Stack.push(new(uint256.Int).SetBytes(
+			common.RightPadBytes(
+				scope.Contract.Code[start:end],
+				pushByteSize,
+			)),
+		)
 		*pc += size
 		return nil, nil
 	}

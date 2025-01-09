@@ -22,15 +22,15 @@ import (
 
 const (
 	VersionMajor = 1        // Major version component of the current release
-	VersionMinor = 13       // Minor version component of the current release
-	VersionPatch = 15       // Patch version component of the current release
+	VersionMinor = 14       // Minor version component of the current release
+	VersionPatch = 0        // Patch version component of the current release
 	VersionMeta  = "stable" // Version metadata to append to the version string
 )
 
 const (
 	BspVersionMajor = 1 // Major version component of the current release
 	BspVersionMinor = 8 // Minor version component of the current release
-	BspVersionPatch = 3 // Patch version component of the current release
+	BspVersionPatch = 4 // Patch version component of the current release
 )
 
 // Version holds the textual version string.
