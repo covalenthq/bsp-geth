@@ -6,7 +6,7 @@ ARG USER=$USER
 
 
 # Build Geth in a stock Go builder container
-FROM golang:1.22-alpine as builder
+FROM golang:1.23-alpine AS builder
 
 RUN apk add --no-cache gcc musl-dev linux-headers git
 
@@ -25,7 +25,7 @@ EXPOSE 8545 8546 30303 30303/udp
 
 ENTRYPOINT ["geth", "--mainnet", "--port", "0", "--log.debug", "--syncmode", "full", "--datadir", "/root/.ethereum/covalent", "--replication.targets", "redis://localhost:6379/?topic=replication", "--replica.result", "--replica.specimen"]
 
-# Add some metadata labels to help programatic image consumption
+# Add some metadata labels to help programmatic image consumption
 ARG COMMIT=""
 ARG VERSION=""
 ARG BUILDNUM=""
