@@ -310,7 +310,6 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, genesis *Genesis
 		receiptsCache:        lru.NewCache[common.Hash, []*types.Receipt](receiptsCacheLimit),
 		blockCache:           lru.NewCache[common.Hash, *types.Block](blockCacheLimit),
 		txLookupCache:        lru.NewCache[common.Hash, txLookup](txLookupCacheLimit),
-		futureBlocks:         lru.NewCache[common.Hash, *types.Block](maxFutureBlocks),
 		engine:               engine,
 		vmConfig:             vmConfig,
 		blockReplicationFeed: event.Feed{},
