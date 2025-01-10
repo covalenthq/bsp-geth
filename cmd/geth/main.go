@@ -30,9 +30,11 @@ import (
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/console/prompt"
+	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/internal/debug"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
@@ -351,10 +353,10 @@ func geth(ctx *cli.Context) error {
 	}
 
 	prepare(ctx)
-	stack := makeFullNode(ctx)
+	stack, backend := makeFullNode(ctx)
 	defer stack.Close()
 
-	startNode(ctx, stack, false)
+	startNode(ctx, stack, backend, false)
 	stack.Wait()
 	return nil
 }
@@ -362,7 +364,7 @@ func geth(ctx *cli.Context) error {
 // startNode boots up the system node and all registered protocols, after which
 // it unlocks any requested accounts, and starts the RPC/IPC interfaces and the
 // miner.
-func startNode(ctx *cli.Context, stack *node.Node, isConsole bool) {
+func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend, isConsole bool) {
 	debug.Memsize.Add("node", stack)
 
 	// Start up the node itself
@@ -449,9 +451,6 @@ func startNode(ctx *cli.Context, stack *node.Node, isConsole bool) {
 		// Set the gas price to the limits from the CLI and start mining
 		gasprice := flags.GlobalBig(ctx, utils.MinerGasPriceFlag.Name)
 		ethBackend.TxPool().SetGasTip(gasprice)
-		if err := ethBackend.StartMining(); err != nil {
-			utils.Fatalf("Failed to start mining: %v", err)
-		}
 	}
 
 	// Kill bsp-geth if --syncmode flag is 'light'
@@ -462,7 +461,7 @@ func startNode(ctx *cli.Context, stack *node.Node, isConsole bool) {
 	// Spawn a standalone goroutine for status synchronization monitoring,
 	// if full sync is completed in block specimen creation mode set replica config flag
 	if ctx.Bool(utils.ReplicaEnableSpecimenFlag.Name) || ctx.Bool(utils.ReplicaEnableResultFlag.Name) {
-		//log.Info("Synchronisation started, historical blocks synced set to 0")
+		log.Info("Synchronisation started, historical blocks synced set to 0")
 		backend.SetHistoricalBlocksSynced()
 
 		go func() {

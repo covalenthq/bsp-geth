@@ -33,8 +33,6 @@ func (s *BlockChainAPI) Multicall(ctx context.Context, commonCallArgs Transactio
 	if state == nil || err != nil {
 		return nil, err
 	}
-
-	globalGasCap := s.b.RPCGasCap()
 	// add max gas once for the EVM contract call (this should suffice for the entire batch call)
 	gp := new(core.GasPool).AddGas(math.MaxUint64)
 
@@ -51,10 +49,7 @@ func (s *BlockChainAPI) Multicall(ctx context.Context, commonCallArgs Transactio
 			callArgsBuf.Input = &payload // nolint: exportloopref,gosec
 
 			// get a new Message to be used once
-			msg, err := callArgsBuf.ToMessage(globalGasCap, header.BaseFee)
-			if err != nil {
-				return nil, err
-			}
+			msg := callArgsBuf.ToMessage(header.BaseFee)
 
 			// get a new instance of the EVM to be used once
 			// ethapi's vmError callback always returns nil, so it is dropped here
