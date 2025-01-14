@@ -443,14 +443,18 @@ func opBlockhash(pc *uint64, interpreter *EVMInterpreter, scope *ScopeContext) (
 	} else {
 		lower = upper - 256
 	}
+	var res common.Hash
 	if num64 >= lower && num64 < upper {
-		res := interpreter.evm.Context.GetHash(num64)
+		res = interpreter.evm.Context.GetHash(num64)
 		if witness := interpreter.evm.StateDB.Witness(); witness != nil {
 			witness.AddBlockHash(num64)
 		}
 		num.SetBytes(res[:])
 	} else {
 		num.Clear()
+	}
+	if specimen := interpreter.evm.StateDB.GetStateSpecimen(); specimen != nil {
+		specimen.LogBlockhashRead(num64, res)
 	}
 	return nil, nil
 }
