@@ -43,6 +43,8 @@ var (
 	errBlockInterruptedByTimeout  = errors.New("timeout while building block")
 )
 
+var enableBlobTxSidecar bool
+
 // environment is the worker's current environment and holds all
 // information of the sealing block generation.
 type environment struct {
@@ -98,6 +100,9 @@ func (miner *Miner) generateWork(params *generateParams, witness bool) *newPaylo
 	if err != nil {
 		return &newPayloadResult{err: err}
 	}
+	if miner.chain.ReplicaConfig.EnableBlob {
+		enableBlobTxSidecar = true
+	}
 	if !params.noTxs {
 		interrupt := new(atomic.Int32)
 		timer := time.AfterFunc(miner.config.Recommit, func() {
@@ -139,6 +144,21 @@ func (miner *Miner) generateWork(params *generateParams, witness bool) *newPaylo
 	if requests != nil {
 		reqHash := types.CalcRequestsHash(requests)
 		work.header.RequestsHash = &reqHash
+	}
+	if enableBlobTxSidecar {
+		work.sidecars = make([]*types.BlobTxSidecar, len(work.sidecars))
+		copy(work.sidecars, work.sidecars)
+		types.BlobTxSidecarChan = make(chan *types.BlobTxSidecarData, 100)
+		go func() {
+			for sidecar := range work.sidecars {
+				types.BlobTxSidecarChan <- &types.BlobTxSidecarData{
+					Blobs:       work.sidecars[sidecar],
+					BlockNumber: work.header.Number,
+				}
+			}
+			log.Info("Closing Chain Sync BlobTxSidecar Channel For", "Block Number:", work.header.Number.Uint64(), "Length:", len(types.BlobTxSidecarChan))
+			close(types.BlobTxSidecarChan)
+		}()
 	}
 
 	block, err := miner.engine.FinalizeAndAssemble(miner.chain, work.header, work.state, &body, work.receipts)
