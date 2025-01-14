@@ -28,8 +28,8 @@ const (
 )
 
 const (
-	BspVersionMajor = 1 // Major version component of the current release
-	BspVersionMinor = 9 // Minor version component of the current release
+	BspVersionMajor = 2 // Major version component of the current release
+	BspVersionMinor = 0 // Minor version component of the current release
 	BspVersionPatch = 0 // Patch version component of the current release
 )
 
