@@ -268,6 +268,16 @@ type BlockChain struct {
 	processor  Processor // Block transaction processor interface
 	vmConfig   vm.Config
 	logger     *tracing.Hooks
+
+	blockReplicationFeed event.Feed
+	ReplicaConfig        *ReplicaConfig
+}
+
+type ReplicaConfig struct {
+	EnableSpecimen         bool
+	EnableResult           bool
+	EnableBlob             bool
+	HistoricalBlocksSynced *uint32
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -301,21 +311,28 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, genesis *Genesis
 	log.Info("")
 
 	bc := &BlockChain{
-		chainConfig:   chainConfig,
-		cacheConfig:   cacheConfig,
-		db:            db,
-		triedb:        triedb,
-		triegc:        prque.New[int64, common.Hash](nil),
-		quit:          make(chan struct{}),
-		chainmu:       syncx.NewClosableMutex(),
-		bodyCache:     lru.NewCache[common.Hash, *types.Body](bodyCacheLimit),
-		bodyRLPCache:  lru.NewCache[common.Hash, rlp.RawValue](bodyCacheLimit),
-		receiptsCache: lru.NewCache[common.Hash, []*types.Receipt](receiptsCacheLimit),
-		blockCache:    lru.NewCache[common.Hash, *types.Block](blockCacheLimit),
-		txLookupCache: lru.NewCache[common.Hash, txLookup](txLookupCacheLimit),
-		engine:        engine,
-		vmConfig:      vmConfig,
-		logger:        vmConfig.Tracer,
+		chainConfig:          chainConfig,
+		cacheConfig:          cacheConfig,
+		db:                   db,
+		triedb:               triedb,
+		triegc:               prque.New[int64, common.Hash](nil),
+		quit:                 make(chan struct{}),
+		chainmu:              syncx.NewClosableMutex(),
+		bodyCache:            lru.NewCache[common.Hash, *types.Body](bodyCacheLimit),
+		bodyRLPCache:         lru.NewCache[common.Hash, rlp.RawValue](bodyCacheLimit),
+		receiptsCache:        lru.NewCache[common.Hash, []*types.Receipt](receiptsCacheLimit),
+		blockCache:           lru.NewCache[common.Hash, *types.Block](blockCacheLimit),
+		txLookupCache:        lru.NewCache[common.Hash, txLookup](txLookupCacheLimit),
+		engine:               engine,
+		vmConfig:             vmConfig,
+		logger:               vmConfig.Tracer,
+		blockReplicationFeed: event.Feed{},
+		ReplicaConfig: &ReplicaConfig{
+			EnableSpecimen:         false,
+			EnableResult:           false,
+			EnableBlob:             false,
+			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
+		},
 	}
 	bc.hc, err = NewHeaderChain(db, chainConfig, engine, bc.insertStopped)
 	if err != nil {
@@ -1769,7 +1786,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool, makeWitness 
 		if err != nil {
 			return nil, it.index, err
 		}
-
+		// Enable prefetching to pull in trie node paths while processing transactions
+		statedb.EnableStateSpecimenTracking()
 		// If we are past Byzantium, enable prefetching to pull in trie node paths
 		// while processing transactions. Before Byzantium the prefetcher is mostly
 		// useless due to the intermediate root hashing after each transaction.
@@ -1826,6 +1844,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool, makeWitness 
 		stats.report(chain, it.index, snapDiffItems, snapBufItems, trieDiffNodes, trieBufNodes, setHead)
 
 		if !setHead {
+			// Export Block Specimen
+			if bc.ReplicaConfig.EnableSpecimen || bc.ReplicaConfig.EnableResult {
+				bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			}
 			// After merge we expect few side chains. Simply count
 			// all blocks the CL gives us for GC processing time
 			bc.gcproc += res.procTime
@@ -1837,7 +1859,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool, makeWitness 
 				"uncles", len(block.Uncles()), "txs", len(block.Transactions()), "gas", block.GasUsed(),
 				"elapsed", common.PrettyDuration(time.Since(start)),
 				"root", block.Root())
-
+			// Handle creation of block specimen for canonical blocks
+			if bc.ReplicaConfig.EnableSpecimen || bc.ReplicaConfig.EnableResult {
+				bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
+			}
 			lastCanon = block
 
 			// Only count canonical blocks for GC processing time
@@ -1848,6 +1873,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool, makeWitness 
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
+			// Currently proof-chain is not handling the forked block use case hence commented out
+			//bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 
 		default:
 			// This in theory is impossible, but lets be nice to our future selves and leave
@@ -1856,6 +1883,10 @@ func (bc *BlockChain) insertChain(chain types.Blocks, setHead bool, makeWitness 
 				"diff", block.Difficulty(), "elapsed", common.PrettyDuration(time.Since(start)),
 				"txs", len(block.Transactions()), "gas", block.GasUsed(), "uncles", len(block.Uncles()),
 				"root", block.Root())
+		}
+		// Is impossible but keeping in line to be nice to our future selves we add this for now
+		if bc.ReplicaConfig.EnableSpecimen || bc.ReplicaConfig.EnableResult {
+			bc.createBlockReplica(block, bc.ReplicaConfig, bc.chainConfig, statedb.TakeStateSpecimen())
 		}
 	}
 	stats.ignored += it.remaining()
