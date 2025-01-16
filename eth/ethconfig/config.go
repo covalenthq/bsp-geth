@@ -153,6 +153,14 @@ type Config struct {
 
 	// OverrideVerkle (TODO: remove after the fork)
 	OverrideVerkle *uint64 `toml:",omitempty"`
+
+	// List of URIs to connect replication providers to
+	BlockReplicationTargets []string `toml:",omitempty"`
+
+	// Bools that make explicit types being exported
+	ReplicaEnableResult   bool
+	ReplicaEnableSpecimen bool
+	ReplicaEnableBlob     bool
 }
 
 // CreateConsensusEngine creates a consensus engine for the given chain config.
