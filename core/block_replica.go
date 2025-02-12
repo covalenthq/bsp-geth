@@ -71,12 +71,13 @@ func (bc *BlockChain) createReplica(block *types.Block, replicaConfig *ReplicaCo
 	bNum := block.NumberU64()
 
 	//totalDifficulty
-	tdRLP := rawdb.ReadTdRLP(bc.db, bHash, bNum)
+	//tdRLP := rawdb.ReadTdRLP(bc.db, bHash, bNum)
 	td := new(big.Int)
-	if err := rlp.Decode(bytes.NewReader(tdRLP), td); err != nil {
-		log.Error("Invalid block total difficulty RLP ", "hash ", bHash, "err", err)
-		return nil, err
-	}
+	td.SetUint64(0)
+	//if err := rlp.Decode(bytes.NewReader(tdRLP), td); err != nil {
+	//	log.Error("Invalid block total difficulty RLP ", "hash ", bHash, "err", err)
+	//	return nil, err
+	//}
 
 	//header
 	headerRLP := rawdb.ReadHeaderRLP(bc.db, bHash, bNum)

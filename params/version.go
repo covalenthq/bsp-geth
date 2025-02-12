@@ -21,16 +21,16 @@ import (
 )
 
 const (
-	VersionMajor = 1        // Major version component of the current release
-	VersionMinor = 14       // Minor version component of the current release
-	VersionPatch = 12       // Patch version component of the current release
-	VersionMeta  = "stable" // Version metadata to append to the version string
+	VersionMajor = 1          // Major version component of the current release
+	VersionMinor = 14         // Minor version component of the current release
+	VersionPatch = 12         // Patch version component of the current release
+	VersionMeta  = "unstable" // Version metadata to append to the version string
 )
 
 const (
 	BspVersionMajor = 2 // Major version component of the current release
-	BspVersionMinor = 0 // Minor version component of the current release
-	BspVersionPatch = 2 // Patch version component of the current release
+	BspVersionMinor = 1 // Minor version component of the current release
+	BspVersionPatch = 0 // Patch version component of the current release
 )
 
 // Version holds the textual version string.
@@ -47,7 +47,7 @@ var BspVersion = func() string {
 var VersionWithMeta = func() string {
 	v := Version
 	if VersionMeta != "" {
-		v += "-" + VersionMeta
+		v += "-" + VersionMeta + "-" + BspVersion
 	}
 	return v
 }()
