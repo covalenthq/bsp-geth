@@ -403,7 +403,7 @@ func (b *backendMock) SubscribeRemovedLogsEvent(ch chan<- core.RemovedLogsEvent)
 
 func (b *backendMock) Engine() consensus.Engine { return nil }
 
-func (b *backendMock) SetHistoricalBlocksSynced(synced bool) {
-	// This is a mock implementation, so we can leave it empty
-	// or add test-specific logic if needed
+func (b *backendMock) SetHistoricalBlocksSynced() bool {
+	// This is a mock implementation, so we can return a default value
+	return true
 }
