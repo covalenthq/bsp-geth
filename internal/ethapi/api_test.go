@@ -636,6 +636,8 @@ func (b testBackend) HistoryPruningCutoff() uint64 {
 	return bn
 }
 
+func (b testBackend) SetHistoricalBlocksSynced() bool { return true }
+
 func TestEstimateGas(t *testing.T) {
 	t.Parallel()
 	// Initialize test accounts
