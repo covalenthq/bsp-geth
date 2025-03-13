@@ -100,7 +100,9 @@ type Ethereum struct {
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 
-	shutdownTracker *shutdowncheck.ShutdownTracker // Tracks if and when the node has shutdown ungracefully
+	shutdownTracker  *shutdowncheck.ShutdownTracker // Tracks if and when the node has shutdown ungracefully
+	blockReplicators []*core.ChainReplicator
+	ReplicaConfig    *core.ReplicaConfig
 }
 
 // New creates a new Ethereum object (including the initialisation of the common Ethereum object),
@@ -161,16 +163,31 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 
 	// Assemble the Ethereum object.
 	eth := &Ethereum{
-		config:          config,
-		chainDb:         chainDb,
-		eventMux:        stack.EventMux(),
-		accountManager:  stack.AccountManager(),
-		engine:          engine,
-		networkID:       networkID,
-		gasPrice:        config.Miner.GasPrice,
-		p2pServer:       stack.Server(),
-		discmix:         enode.NewFairMix(0),
-		shutdownTracker: shutdowncheck.NewShutdownTracker(chainDb),
+		config:           config,
+		chainDb:          chainDb,
+		eventMux:         stack.EventMux(),
+		accountManager:   stack.AccountManager(),
+		engine:           engine,
+		networkID:        networkID,
+		gasPrice:         config.Miner.GasPrice,
+		p2pServer:        stack.Server(),
+		discmix:          enode.NewFairMix(0),
+		shutdownTracker:  shutdowncheck.NewShutdownTracker(chainDb),
+		blockReplicators: make([]*core.ChainReplicator, 0),
+		ReplicaConfig: &core.ReplicaConfig{
+			EnableSpecimen:         config.ReplicaEnableSpecimen,
+			EnableResult:           config.ReplicaEnableResult,
+			EnableBlob:             config.ReplicaEnableBlob,
+			HistoricalBlocksSynced: new(uint32), // Always set 0 for historical mode at start
+		},
+	}
+	for _, targets := range config.BlockReplicationTargets {
+		replicator, err := CreateReplicator(targets)
+		if err != nil {
+			return nil, err
+		}
+		log.Info("Block replication started", "targets", targets, "network ID", config.NetworkId, "export block-specimen", eth.ReplicaConfig.EnableSpecimen, "export block-result", eth.ReplicaConfig.EnableResult, "export blob-specimen", eth.ReplicaConfig.EnableBlob)
+		eth.blockReplicators = append(eth.blockReplicators, replicator)
 	}
 	bcVersion := rawdb.ReadDatabaseVersion(chainDb)
 	var dbVer = "<nil>"
@@ -237,6 +254,13 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		Disabled:       config.LogNoHistory,
 		ExportFileName: config.LogExportCheckpoints,
 		HashScheme:     scheme == rawdb.HashScheme,
+	}
+	eth.blockchain.SetBlockReplicaExports(eth.ReplicaConfig)
+	for _, bRRepl := range eth.blockReplicators {
+		bRRepl.Start(eth.blockchain, eth.ReplicaConfig)
+	}
+	if config.BlobPool.Datadir != "" {
+		config.BlobPool.Datadir = stack.ResolvePath(config.BlobPool.Datadir)
 	}
 	chainView := eth.newChainView(eth.blockchain.CurrentBlock())
 	historyCutoff, _ := eth.blockchain.HistoryPruningCutoff()
@@ -515,6 +539,9 @@ func (s *Ethereum) Stop() error {
 	s.filterMaps.Stop()
 	s.txPool.Close()
 	s.blockchain.Stop()
+	for _, repl := range s.blockReplicators {
+		repl.Stop()
+	}
 	s.engine.Close()
 
 	// Clean shutdown marker as the last thing before closing db

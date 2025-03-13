@@ -98,6 +98,8 @@ type Backend interface {
 
 	CurrentView() *filtermaps.ChainView
 	NewMatcherBackend() filtermaps.MatcherBackend
+
+	SetHistoricalBlocksSynced() bool
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {
