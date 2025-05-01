@@ -101,6 +101,10 @@ if one is set.  Otherwise it prints the genesis from the datadir.`,
 			utils.VMTraceJsonConfigFlag,
 			utils.TransactionHistoryFlag,
 			utils.StateHistoryFlag,
+			utils.BlockReplicationTargetsFlag,
+			utils.ReplicaEnableSpecimenFlag,
+			utils.ReplicaEnableResultFlag,
+			utils.ReplicaEnableBlobFlag,
 		}, utils.DatabaseFlags),
 		Description: `
 The import command imports blocks from an RLP-encoded form. The form can be one file
@@ -282,12 +286,15 @@ func importChain(ctx *cli.Context) error {
 	}
 	stack, cfg := makeConfigNode(ctx)
 	defer stack.Close()
+	replicators := utils.CreateReplicators(&cfg.Eth)
 
 	// Start metrics export if enabled
 	utils.SetupMetrics(&cfg.Metrics)
 
 	chain, db := utils.MakeChain(ctx, stack, false)
 	defer db.Close()
+
+	utils.AttachReplicators(replicators, chain)
 
 	// Start periodically gathering memory profiles
 	var peakMemAlloc, peakMemSys atomic.Uint64
@@ -323,6 +330,7 @@ func importChain(ctx *cli.Context) error {
 		}
 	}
 	chain.Stop()
+	utils.DrainReplicators(replicators)
 	fmt.Printf("Import done in %v.\n\n", time.Since(start))
 
 	// Output pre-compaction stats mostly to see the import trashing
