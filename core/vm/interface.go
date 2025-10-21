@@ -101,4 +101,5 @@ type StateDB interface {
 
 	// Finalise must be invoked at the end of a transaction
 	Finalise(bool)
+	GetStateSpecimen() *types.StateSpecimen
 }

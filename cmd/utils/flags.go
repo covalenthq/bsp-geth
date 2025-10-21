@@ -27,6 +27,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	godebug "runtime/debug"
@@ -790,6 +791,23 @@ var (
 		Usage:    "Maximum number of bytes returned from a batched call",
 		Value:    node.DefaultConfig.BatchResponseMaxSize,
 		Category: flags.APICategory,
+	}
+	BlockReplicationTargetsFlag = &cli.StringFlag{
+		Name:  "replication.targets",
+		Usage: "Comma separated URLs for message-queue delivery of block specimens",
+		Value: "",
+	}
+	ReplicaEnableSpecimenFlag = &cli.BoolFlag{
+		Name:  "replica.specimen",
+		Usage: "Enables export of fields that comprise a block-specimen",
+	}
+	ReplicaEnableResultFlag = &cli.BoolFlag{
+		Name:  "replica.result",
+		Usage: "Enables export of fields that comprise a block-result",
+	}
+	ReplicaEnableBlobFlag = &cli.BoolFlag{
+		Name:  "replica.blob",
+		Usage: "Enables export of fields that comprise a block-blob",
 	}
 
 	// Network Settings
@@ -1604,6 +1622,9 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	setMiner(ctx, &cfg.Miner)
 	setRequiredBlocks(ctx, cfg)
 
+	if ctx.IsSet(BlockReplicationTargetsFlag.Name) {
+		setBlockReplicationTargets(ctx, cfg)
+	}
 	// Cap the cache allowance and tune the garbage collector
 	mem, err := gopsutil.VirtualMemory()
 	if err == nil {
@@ -2351,4 +2372,64 @@ func MakeTrieDatabase(ctx *cli.Context, stack *node.Node, disk ethdb.Database, p
 	pathConfig.JournalDirectory = stack.ResolvePath("triedb")
 	config.PathDB = &pathConfig
 	return triedb.NewDatabase(disk, config)
+}
+
+// setBlockResultTargets creates a list of replication targets from the command line flags.
+func setBlockReplicationTargets(ctx *cli.Context, cfg *eth.Config) {
+	var urls []string
+
+	if ctx.IsSet(BlockReplicationTargetsFlag.Name) {
+		urls = strings.Split(ctx.String(BlockReplicationTargetsFlag.Name), ",")
+	}
+
+	cfg.BlockReplicationTargets = make([]string, 0, len(urls))
+	for _, urlStr := range urls {
+		if urlStr != "" {
+			_, err := url.Parse(urlStr)
+			if err != nil {
+				log.Crit("Replication-target URL invalid", "url", urlStr, "err", err)
+				os.Exit(1)
+			}
+			cfg.BlockReplicationTargets = append(cfg.BlockReplicationTargets, urlStr)
+		}
+	}
+	if ctx.IsSet(ReplicaEnableResultFlag.Name) || ctx.IsSet(ReplicaEnableSpecimenFlag.Name) {
+		if ctx.Bool(ReplicaEnableSpecimenFlag.Name) {
+			cfg.ReplicaEnableSpecimen = true
+		}
+		if ctx.Bool(ReplicaEnableResultFlag.Name) {
+			cfg.ReplicaEnableResult = true
+		}
+		if ctx.Bool(ReplicaEnableBlobFlag.Name) {
+			cfg.ReplicaEnableBlob = true
+		}
+	} else {
+		Fatalf("--replication.targets flag is invalid without --replica.specimen and/or --replica.result, ONLY ADD --replica.blob with both replica.specimen AND replica.result flags for complete unified state capture)")
+	}
+}
+
+func CreateReplicators(config *eth.Config) []*core.ChainReplicator {
+	replicators := make([]*core.ChainReplicator, 0)
+
+	for _, blockReplicationTargets := range config.BlockReplicationTargets {
+		blockRepl, err := eth.CreateReplicator(blockReplicationTargets)
+		if err != nil {
+			Fatalf("Can't create replication target: %v", err)
+		}
+		replicators = append(replicators, blockRepl)
+	}
+
+	return replicators
+}
+
+func AttachReplicators(replicators []*core.ChainReplicator, chain *core.BlockChain) {
+	for _, replicator := range replicators {
+		replicator.Start(chain, chain.ReplicaConfig)
+	}
+}
+
+func DrainReplicators(replicators []*core.ChainReplicator) {
+	for _, replicator := range replicators {
+		replicator.Stop()
+	}
 }

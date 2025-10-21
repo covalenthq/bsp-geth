@@ -38,7 +38,7 @@ var Semantic = fmt.Sprintf("%d.%d.%d", version.Major, version.Minor, version.Pat
 var WithMeta = func() string {
 	v := Semantic
 	if version.Meta != "" {
-		v += "-" + version.Meta
+		v += "-" + version.Meta + "-" + "bsp-" + version.BspVersion
 	}
 	return v
 }()
