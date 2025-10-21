@@ -290,3 +290,7 @@ func (s *hookedStateDB) Finalise(deleteEmptyObjects bool) {
 		}
 	}
 }
+
+func (s *hookedStateDB) GetStateSpecimen() *types.StateSpecimen {
+	return s.inner.GetStateSpecimen()
+}

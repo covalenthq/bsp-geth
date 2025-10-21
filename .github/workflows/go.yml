@@ -16,11 +16,11 @@ jobs:
       with:
         submodules: false
 
-    # Cache build tools to avoid downloading them each time
-    - uses: actions/cache@v4
-      with:
-        path: build/cache
-        key: ${{ runner.os }}-build-tools-cache-${{ hashFiles('build/checksums.txt') }}
+      # Cache build tools to avoid downloading them each time
+      - uses: actions/cache@v4
+        with:
+          path: build/cache
+          key: ${{ runner.os }}-build-tools-cache-${{ hashFiles('build/checksums.txt') }}
 
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -28,11 +28,11 @@ jobs:
         go-version: 1.25
         cache: false
 
-    - name: Run linters
-      run: |
-        go run build/ci.go lint
-        go run build/ci.go check_generate
-        go run build/ci.go check_baddeps
+      - name: Run linters
+        run: |
+          go run build/ci.go lint
+          go run build/ci.go check_generate
+          go run build/ci.go check_baddeps
 
   test:
     name: Test
@@ -49,7 +49,7 @@ jobs:
           submodules: true
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
           cache: false

@@ -156,6 +156,9 @@ type StateDB struct {
 	StorageLoaded  int          // Number of storage slots retrieved from the database during the state transition
 	StorageUpdated atomic.Int64 // Number of storage slots updated during the state transition
 	StorageDeleted atomic.Int64 // Number of storage slots deleted during the state transition
+
+	// Log of state data read from backing DB
+	stateSpecimen *types.StateSpecimen
 }
 
 // New creates a new state from a given trie.
@@ -182,10 +185,12 @@ func NewWithReader(root common.Hash, db Database, reader Reader) (*StateDB, erro
 		journal:              newJournal(),
 		accessList:           newAccessList(),
 		transientStorage:     newTransientStorage(),
+		stateSpecimen:        types.NewStateSpecimen(),
 	}
 	if db.TrieDB().IsVerkle() {
 		sdb.accessEvents = NewAccessEvents(db.PointCache())
 	}
+
 	return sdb, nil
 }
 
@@ -615,6 +620,8 @@ func (s *StateDB) getStateObject(addr common.Address) *stateObject {
 			log.Error("Failed to prefetch account", "addr", addr, "err", err)
 		}
 	}
+	s.stateSpecimen.LogAccountRead(addr, acct.Nonce, acct.Balance.ToBig(), acct.CodeHash)
+
 	// Insert into the live set
 	obj := newObject(s, addr, acct)
 	s.setStateObject(obj)
@@ -692,6 +699,7 @@ func (s *StateDB) Copy() *StateDB {
 		accessList:       s.accessList.Copy(),
 		transientStorage: s.transientStorage.Copy(),
 		journal:          s.journal.copy(),
+		stateSpecimen:    types.NewStateSpecimen(),
 	}
 	if s.trie != nil {
 		state.trie = mustCopyTrie(s.trie)
@@ -701,6 +709,9 @@ func (s *StateDB) Copy() *StateDB {
 	}
 	if s.accessEvents != nil {
 		state.accessEvents = s.accessEvents.Copy()
+	}
+	if s.stateSpecimen != nil {
+		state.stateSpecimen = s.stateSpecimen.Copy()
 	}
 	// Deep copy cached state objects.
 	for addr, obj := range s.stateObjects {
@@ -1495,4 +1506,18 @@ func (s *StateDB) Witness() *stateless.Witness {
 
 func (s *StateDB) AccessEvents() *AccessEvents {
 	return s.accessEvents
+}
+
+func (s *StateDB) EnableStateSpecimenTracking() {
+	s.stateSpecimen = types.NewStateSpecimen()
+}
+
+func (s *StateDB) TakeStateSpecimen() *types.StateSpecimen {
+	sp := s.stateSpecimen
+	sp.BlockhashReadMap = make(map[uint64]common.Hash)
+	return sp
+}
+
+func (s *StateDB) GetStateSpecimen() *types.StateSpecimen {
+	return s.stateSpecimen
 }
