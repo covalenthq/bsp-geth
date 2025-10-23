@@ -204,6 +204,9 @@ func (s *stateObject) GetCommittedState(key common.Hash) common.Hash {
 			log.Error("Failed to prefetch storage slot", "addr", s.address, "key", key, "err", err)
 		}
 	}
+	if sS := s.db.stateSpecimen; sS != nil {
+		sS.LogStorageRead(s.address, key, value)
+	}
 	s.originStorage[key] = value
 	return value
 }
@@ -523,6 +526,9 @@ func (s *stateObject) Code() []byte {
 	}
 	if len(code) == 0 {
 		s.db.setError(fmt.Errorf("code is not found %x", s.CodeHash()))
+	}
+	if sS := s.db.stateSpecimen; sS != nil {
+		sS.LogCodeRead(s.CodeHash(), code)
 	}
 	s.code = code
 	return code
