@@ -42,6 +42,23 @@ profile.cov
 # VS Code
 .vscode
 
+# dashboard
+/dashboard/assets/flow-typed
+/dashboard/assets/node_modules
+/dashboard/assets/stats.json
+/dashboard/assets/bundle.js
+/dashboard/assets/bundle.js.map
+/dashboard/assets/package-lock.json
+
+**/yarn-error.log
+
+data/
+ganache_data/
+.env
+scripts/
+logs/
+coverage.out
+coverage.txt
 tests/spec-tests/
 
 # binaries
@@ -57,3 +74,5 @@ cmd/geth/geth
 cmd/rlpdump/rlpdump
 cmd/workload/workload
 cmd/keeper/keeper
+bin/
+out/

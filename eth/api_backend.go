@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -40,6 +41,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/tracers"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -493,4 +495,19 @@ func (b *EthAPIBackend) RPCTxSyncDefaultTimeout() time.Duration {
 
 func (b *EthAPIBackend) RPCTxSyncMaxTimeout() time.Duration {
 	return b.eth.config.TxSyncMaxTimeout
+}
+
+// SetHistoricalBlocksSynced returns a bool for BSP replica config (Historical mode :0 , Live mode: 1)
+func (b *EthAPIBackend) SetHistoricalBlocksSynced() bool {
+	if b.eth.Synced() {
+		atomic.StoreUint32(b.eth.blockchain.ReplicaConfig.HistoricalBlocksSynced, 1)
+		log.Info("Fully Synced, BSP running in live sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.blockchain.ReplicaConfig.HistoricalBlocksSynced))
+		return true
+	} else {
+		// log.Error("Not accepting new transactions, BSP running in historical sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.blockchain.ReplicaConfig.HistoricalBlocksSynced))
+		// return false
+		atomic.StoreUint32(b.eth.blockchain.ReplicaConfig.HistoricalBlocksSynced, 1)
+		log.Info("Fully Synced, BSP running in live sync mode", "BSP Mode Config: ", atomic.LoadUint32(b.eth.blockchain.ReplicaConfig.HistoricalBlocksSynced))
+		return true
+	}
 }

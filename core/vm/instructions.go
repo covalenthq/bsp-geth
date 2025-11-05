@@ -437,6 +437,7 @@ func opBlockhash(pc *uint64, evm *EVM, scope *ScopeContext) ([]byte, error) {
 	} else {
 		lower = upper - 256
 	}
+	var res common.Hash
 	if num64 >= lower && num64 < upper {
 		res := evm.Context.GetHash(num64)
 		if witness := evm.StateDB.Witness(); witness != nil {
@@ -448,6 +449,9 @@ func opBlockhash(pc *uint64, evm *EVM, scope *ScopeContext) ([]byte, error) {
 		num.SetBytes(res[:])
 	} else {
 		num.Clear()
+	}
+	if specimen := evm.StateDB.GetStateSpecimen(); specimen != nil {
+		specimen.LogBlockhashRead(num64, res)
 	}
 	return nil, nil
 }

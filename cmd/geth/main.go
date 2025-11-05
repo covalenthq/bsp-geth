@@ -32,6 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/internal/debug"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
@@ -156,6 +157,10 @@ var (
 		utils.BeaconGenesisTimeFlag,
 		utils.BeaconCheckpointFlag,
 		utils.BeaconCheckpointFileFlag,
+		utils.BlockReplicationTargetsFlag,
+		utils.ReplicaEnableResultFlag,
+		utils.ReplicaEnableSpecimenFlag,
+		utils.ReplicaEnableBlobFlag,
 	}, utils.NetworkFlags, utils.DatabaseFlags)
 
 	rpcFlags = []cli.Flag{
@@ -329,17 +334,17 @@ func geth(ctx *cli.Context) error {
 	}
 
 	prepare(ctx)
-	stack := makeFullNode(ctx)
+	stack, backend := makeFullNode(ctx)
 	defer stack.Close()
 
-	startNode(ctx, stack, false)
+	startNode(ctx, stack, false, backend)
 	stack.Wait()
 	return nil
 }
 
 // startNode boots up the system node and all registered protocols, after which
 // it starts the RPC/IPC interfaces and the miner.
-func startNode(ctx *cli.Context, stack *node.Node, isConsole bool) {
+func startNode(ctx *cli.Context, stack *node.Node, isConsole bool, backend ethapi.Backend) {
 	// Start up the node itself
 	utils.StartNode(ctx, stack, isConsole)
 
@@ -387,6 +392,38 @@ func startNode(ctx *cli.Context, stack *node.Node, isConsole bool) {
 			}
 		}
 	}()
+
+	// Kill bsp-geth if --syncmode flag is 'light'
+	if ctx.String(utils.BlockReplicationTargetsFlag.Name) != "" && ctx.String(utils.SyncModeFlag.Name) == "light" {
+		utils.Fatalf("Block specimen production not supported for 'light' sync (only supported modes are 'snap' and 'full'")
+	}
+
+	// Spawn a standalone goroutine for status synchronization monitoring,
+	// if full sync is completed in block specimen creation mode set replica config flag
+	if ctx.Bool(utils.ReplicaEnableSpecimenFlag.Name) || ctx.Bool(utils.ReplicaEnableResultFlag.Name) {
+		//log.Info("Synchronisation started, historical blocks synced set to 0")
+		backend.SetHistoricalBlocksSynced()
+
+		go func() {
+			sub := stack.EventMux().Subscribe(downloader.DoneEvent{})
+			defer sub.Unsubscribe()
+			for {
+				event := <-sub.Chan()
+				if event == nil {
+					continue
+				}
+				done, ok := event.Data.(downloader.DoneEvent)
+				if !ok {
+					continue
+				}
+				if timestamp := time.Unix(int64(done.Latest.Time), 0); time.Since(timestamp) < 10*time.Minute {
+					log.Info("Synchronisation completed, setting historical blocks synced to 1", "latestnum", done.Latest.Number, "latesthash", done.Latest.Hash(),
+						"age", common.PrettyAge(timestamp))
+					backend.SetHistoricalBlocksSynced()
+				}
+			}
+		}()
+	}
 
 	// Spawn a standalone goroutine for status synchronization monitoring,
 	// close the node when synchronization is complete if user required.
