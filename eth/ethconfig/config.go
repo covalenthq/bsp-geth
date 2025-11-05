@@ -189,6 +189,14 @@ type Config struct {
 	// EIP-7966: eth_sendRawTransactionSync timeouts
 	TxSyncDefaultTimeout time.Duration `toml:",omitempty"`
 	TxSyncMaxTimeout     time.Duration `toml:",omitempty"`
+
+	// List of URIs to connect replication providers to
+	BlockReplicationTargets []string `toml:",omitempty"`
+
+	// Bools that make explicit types being exported
+	ReplicaEnableResult   bool
+	ReplicaEnableSpecimen bool
+	ReplicaEnableBlob     bool
 }
 
 // CreateConsensusEngine creates a consensus engine for the given chain config.
